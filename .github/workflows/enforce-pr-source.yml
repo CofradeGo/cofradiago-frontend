@@ -2,7 +2,7 @@ name: Enforce correct PR source branch
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   enforce-branch:
