@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/" # Ubicación del package.json
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automation"
