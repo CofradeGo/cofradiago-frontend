@@ -1,0 +1,15 @@
+# ----- GLOBAL OWNERSHIP -----
+
+# Todas las rutas del repositorio están bajo responsabilidad del desarrollador principal
+
+- @angelcardenasrod
+
+# ----- SPECIFIC OPTIONAL SECTIONS -----
+
+# Si más adelante incorporas equipo, puedes definir owners por áreas:
+
+# /src/auth/ @backend-dev
+
+# /src/components/ @frontend-dev
+
+# /docs/ @product-owner
