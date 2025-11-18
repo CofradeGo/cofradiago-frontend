@@ -1,0 +1,34 @@
+name: CI Frontend
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Clona el repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Configura Node.js 22
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      # Instala dependencias
+      - name: Install dependencies
+        run: npm install
+
+      # Ejecuta ESLint para comprobar el estilo de código
+      - name: Run lint
+        run: npm run lint
+
+      # Ejecuta tests con Vitest
+      - name: Run tests
+        run: npm run test
