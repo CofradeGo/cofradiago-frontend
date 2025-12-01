@@ -1,13 +1,20 @@
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./routes/AppRoutes";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { LoginPage } from "./pages/LoginPage";
 
-function App() {
+export const App: React.FC = () => {
   return (
-    // BrowserRouter es necesario para que react-router funcione
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route
+        path="*"
+        element={
+          <div className="min-h-screen flex items-center justify-center">
+            <h1 className="text-3xl font-bold text-gray-700">404 - Página no encontrada</h1>
+          </div>
+        }
+      />
+    </Routes>
   );
-}
-
-export default App;
+};
