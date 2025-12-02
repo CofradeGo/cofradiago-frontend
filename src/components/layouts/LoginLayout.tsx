@@ -1,20 +1,21 @@
 import React from "react";
-import { LoginForm } from "../organisms/LoginForm";
 
 interface LoginLayoutProps {
   cofradeLogo: string;
   hdadLogo: string;
   hdadName: string;
+  children?: React.ReactNode; // el formulario o cualquier contenido dinámico
 }
 
-export const LoginLayout: React.FC<LoginLayoutProps> = ({ cofradeLogo, hdadLogo, hdadName }) => {
-  const handleLogin = (email: string, password: string) => {
-    console.log("Login submit:", email, password);
-  };
-
+export const LoginLayout: React.FC<LoginLayoutProps> = ({
+  cofradeLogo,
+  hdadLogo,
+  hdadName,
+  children,
+}) => {
   return (
     <div className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2 bg-gray-50">
-      {/* BLOQUE LOGIN (mobile primero) */}
+      {/* BLOQUE LOGIN */}
       <div className="order-1 md:order-2 flex items-center justify-center p-8">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10 border border-gray-100">
           {/* Logo hermandad */}
@@ -23,10 +24,10 @@ export const LoginLayout: React.FC<LoginLayoutProps> = ({ cofradeLogo, hdadLogo,
             <h2 className="text-xl font-semibold text-gray-800 tracking-wide">{hdadName}</h2>
           </div>
 
-          {/* Formulario */}
-          <LoginForm onSubmit={handleLogin} />
+          {/* Formulario dinámico */}
+          {children}
 
-          {/* Footer dentro del formulario */}
+          {/* Footer */}
           <div className="w-full mt-6 flex items-center justify-between text-sm">
             <button
               type="button"
@@ -34,18 +35,15 @@ export const LoginLayout: React.FC<LoginLayoutProps> = ({ cofradeLogo, hdadLogo,
             >
               Olvidé mi contraseña
             </button>
-
             <span className="text-gray-400">&copy; 2025 CofradeGO</span>
           </div>
         </div>
       </div>
 
-      {/* BLOQUE COFRADEGO IZQUIERDA (mobile abajo) */}
+      {/* BLOQUE COFRADEGO */}
       <div className="order-2 md:order-1 flex flex-col items-center justify-center bg-indigo-900 text-white p-10 md:p-16">
         <img src={cofradeLogo} alt="CofradeGO" className="h-32 md:h-48 mb-6 drop-shadow-xl" />
-
         <h1 className="text-4xl md:text-5xl font-bold tracking-wide text-center">CofradeGO</h1>
-
         <p className="mt-4 text-indigo-200 text-lg text-center max-w-xs md:max-w-sm">
           La plataforma digital para gestionar tus cofradías
         </p>

@@ -1,11 +1,12 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
+import { DashboardPage } from "./pages/DashboardPage";
 
 export const App: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/:domain/login" element={<LoginPage />} />
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route
         path="*"
@@ -15,6 +16,7 @@ export const App: React.FC = () => {
           </div>
         }
       />
+      <Route path="/:domain/dashboard" element={<DashboardPage />} />
     </Routes>
   );
 };
