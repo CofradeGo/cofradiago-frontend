@@ -1,0 +1,22 @@
+<svg width="340" height="340" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+  <!-- Círculo exterior tech -->
+  <circle cx="170" cy="170" r="150" stroke="#ffffff" stroke-width="14" fill="none"/>
+
+  <!-- Capirote geométrico tech -->
+  <path d="
+    M170 40
+    L105 250
+    Q103 260 115 260
+    L225 260
+    Q237 260 235 250
+    Z"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="16"
+    stroke-linejoin="round"
+  />
+
+  <!-- Ojos vacíos geométricos (solo contorno) -->
+  <circle cx="150" cy="165" r="12" fill="none" stroke="#ffffff" stroke-width="6"/>
+  <circle cx="190" cy="165" r="12" fill="none" stroke="#ffffff" stroke-width="6"/>
+</svg>
