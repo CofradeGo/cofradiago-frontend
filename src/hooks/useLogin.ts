@@ -1,8 +1,8 @@
-// src/hooks/useLogin.ts
 import { useState } from "react";
 import axiosClient from "../api/axiosClient";
 import { jwtDecode } from "jwt-decode";
 import type { AxiosError } from "axios";
+import { AuthEndpoints } from "../api/api";
 
 interface LoginPayload {
   username: string;
@@ -10,7 +10,7 @@ interface LoginPayload {
 }
 
 interface DecodedToken {
-  id: string;
+  id: number;
   username: string;
   role: "DMG" | "AUXILIAR";
   email: string;
@@ -28,25 +28,19 @@ export const useLogin = (domain: string) => {
     setError(null);
 
     try {
-      // Llamada al endpoint de login
-      const res = await axiosClient.post<{ token: string }>(
-        `/api/v1/auth/login/${domain}`,
-        payload,
-      );
+      const res = await axiosClient.post<{
+        accessToken: string;
+        refreshToken: string;
+      }>(AuthEndpoints.login(domain), payload, { withCredentials: true });
 
-      // Guardamos el token en localStorage
-      localStorage.setItem("token", res.data.token);
-
-      // Decodificamos el token para extraer la info del usuario
-      const user: DecodedToken = jwtDecode(res.data.token);
-
-      // Guardamos la info decodificada en localStorage
+      localStorage.setItem("accessToken", res.data.accessToken);
+      const user: DecodedToken = jwtDecode(res.data.accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
       return user;
     } catch (err) {
       const axiosErr = err as AxiosError<{ error: string }>;
-      console.error(axiosErr);
+      console.error("Login error:", axiosErr);
       setError(axiosErr.response?.data?.error || "Error al iniciar sesión");
       return null;
     } finally {

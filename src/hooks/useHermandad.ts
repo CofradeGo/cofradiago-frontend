@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axiosClient from "../api/axiosClient";
 import type { AxiosError } from "axios";
+import { HermandadEndpoints } from "../api/api";
 
 export interface Hermandad {
   domain: string;
@@ -24,17 +25,13 @@ export const useHermandad = (domain: string, useToken: boolean = false) => {
       setError(null);
 
       try {
-        const headers: Record<string, string> = {};
+        // Público o privado según useToken
+        const endpoint = useToken
+          ? HermandadEndpoints.private(domain) // Axios une baseURL + API_BASE + /hermandad/...
+          : `${import.meta.env.VITE_API_URL}${HermandadEndpoints.public(domain)}`;
+        // ruta completa para público
 
-        if (useToken) {
-          const token = localStorage.getItem("token");
-          if (!token) throw new Error("No hay token disponible");
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const endpoint = useToken ? `/api/v1/hermandad/${domain}` : `/public/hermandad/${domain}`;
-
-        const res = await axiosClient.get<Hermandad>(endpoint, { headers });
+        const res = await axiosClient.get(endpoint);
 
         if (isMounted) setData(res.data);
       } catch (err) {
