@@ -1,4 +1,3 @@
-// src/api/axiosClient.ts
 import axios, { AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 import { AuthEndpoints } from "../api/api";
 
