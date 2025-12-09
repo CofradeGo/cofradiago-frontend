@@ -10,11 +10,17 @@ export interface UpdateUserPayload {
   email?: string;
 }
 
+export interface ChangePasswordPayload {
+  oldPassword: string;
+  newPassword: string;
+}
+
 interface UseUsuarioReturn {
   user: User | null;
   loading: boolean;
   error: string | null;
-  updateUsuario: (data: UpdateUserPayload) => Promise<User>; // <-- SIEMPRE User
+  updateUsuario: (data: UpdateUserPayload) => Promise<User>;
+  changePassword: (data: ChangePasswordPayload) => Promise<void>;
 }
 
 export const useUsuario = (): UseUsuarioReturn => {
@@ -59,5 +65,26 @@ export const useUsuario = (): UseUsuarioReturn => {
     }
   };
 
-  return { user, loading, error, updateUsuario };
+  const changePassword = async (data: ChangePasswordPayload): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await axiosClient.patch(UserEndpoints.updateCurrent, data, {
+        withCredentials: true,
+      });
+    } catch (err) {
+      let msg = "Error al cambiar la contraseña";
+      if (axios.isAxiosError(err)) {
+        msg = err.response?.data?.message || msg;
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { user, loading, error, updateUsuario, changePassword };
 };
