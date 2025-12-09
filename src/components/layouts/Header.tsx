@@ -1,3 +1,4 @@
+// src/components/layouts/Header.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { User } from "lucide-react";
 import { useLogout } from "../../hooks/useLogout";
@@ -7,9 +8,14 @@ import { ROUTES } from "../../routes/routes";
 interface HeaderProps {
   username: string;
   onToggleSidebar: () => void;
+  onOpenChangePasswordModal: () => void; // <-- agregado
 }
 
-export const Header: React.FC<HeaderProps> = ({ username, onToggleSidebar }) => {
+export const Header: React.FC<HeaderProps> = ({
+  username,
+  onToggleSidebar,
+  onOpenChangePasswordModal,
+}) => {
   const { logout: logoutService } = useLogout();
   const navigate = useNavigate();
   const { domain } = useParams<{ domain: string }>();
@@ -76,6 +82,15 @@ export const Header: React.FC<HeaderProps> = ({ username, onToggleSidebar }) => 
               onClick={goToPerfil}
             >
               Perfil
+            </button>
+            <button
+              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+              onClick={() => {
+                setDropdownOpen(false);
+                onOpenChangePasswordModal(); // <-- abre modal
+              }}
+            >
+              Cambiar contraseña
             </button>
             <button
               className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
