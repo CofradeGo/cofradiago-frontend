@@ -1,3 +1,4 @@
+// src/hooks/useUser.ts
 import { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import axiosClient from "../api/axiosClient";
@@ -14,18 +15,25 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
-interface UseUsuarioReturn {
+export interface CreateUserPayload {
+  username: string;
+  password: string;
+  email?: string;
+}
+
+interface UseUserReturn {
   user: User | null;
+  users: User[] | null;
   loading: boolean;
   error: string | null;
   updateUsuario: (data: UpdateUserPayload) => Promise<User>;
   changePassword: (data: ChangePasswordPayload) => Promise<void>;
-  users: User[] | null;
+  createAuxUser: (data: CreateUserPayload) => Promise<User>;
   refetchUsers: () => void;
-  deleteUsuario: (id: number) => Promise<string>;
+  deleteUsuario: (userId: number) => Promise<string>;
 }
 
-export const useUsuario = (): UseUsuarioReturn => {
+export const useUsuario = (): UseUserReturn => {
   // Usuario logueado
   const [user, setUser] = useState<User | null>(() => {
     const stored = localStorage.getItem("user");
@@ -71,19 +79,14 @@ export const useUsuario = (): UseUsuarioReturn => {
   const updateUsuario = async (data: UpdateUserPayload): Promise<User> => {
     setLoading(true);
     setError(null);
-
     try {
       const res = await axiosClient.patch<{ user: User }>(UserEndpoints.updateCurrent, data, {
         withCredentials: true,
       });
-
       const updated = res.data.user;
-
-      // Guardar
       setUser(updated);
       localStorage.setItem("user", JSON.stringify(updated));
-
-      return updated; // siempre devuelve un usuario válido
+      return updated;
     } catch (err) {
       let msg = "Error al actualizar usuario";
       if (axios.isAxiosError(err)) {
@@ -92,9 +95,8 @@ export const useUsuario = (): UseUsuarioReturn => {
       } else if (err instanceof Error) {
         msg = err.message;
       }
-
       setError(msg);
-      throw new Error(msg); // lanzamos error para que el modal lo capture
+      throw new Error(msg);
     } finally {
       setLoading(false);
     }
@@ -105,9 +107,7 @@ export const useUsuario = (): UseUsuarioReturn => {
     setLoading(true);
     setError(null);
     try {
-      await axiosClient.patch(UserEndpoints.updateCurrent, data, {
-        withCredentials: true,
-      });
+      await axiosClient.patch(UserEndpoints.updateCurrent, data, { withCredentials: true });
     } catch (err) {
       let msg = "Error al cambiar la contraseña";
       if (axios.isAxiosError(err)) {
@@ -122,21 +122,44 @@ export const useUsuario = (): UseUsuarioReturn => {
     }
   };
 
-  // -------------------- Hook init --------------------
-  // Opcional: cargar usuarios automáticamente al montar
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  // DELETE USER
-  const deleteUsuario = async (id: number): Promise<string> => {
+  // Crear usuario AUX
+  const createAuxUser = async (data: CreateUserPayload): Promise<User> => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axiosClient.patch<{ message: string }>(UserEndpoints.deleteUser(id), {
-        withCredentials: true,
-      });
-      // Refrescar lista tras eliminar
+      const res = await axiosClient.post<{ message: string; user: User }>(
+        UserEndpoints.registerAux,
+        data,
+        { withCredentials: true },
+      );
+      // Opcional: refrescar usuarios tras creación
+      fetchUsers();
+      return res.data.user;
+    } catch (err) {
+      let msg = "Error al crear usuario AUX";
+      if (axios.isAxiosError(err)) {
+        msg = err.response?.data?.message || msg;
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Eliminar usuario (soft delete)
+  const deleteUsuario = async (userId: number): Promise<string> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axiosClient.patch<{ message: string }>(
+        `/users/${userId}`,
+        {},
+        { withCredentials: true },
+      );
+      // Refetch users tras eliminación
       fetchUsers();
       return res.data.message;
     } catch (err) {
@@ -153,13 +176,19 @@ export const useUsuario = (): UseUsuarioReturn => {
     }
   };
 
+  // -------------------- Hook init --------------------
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   return {
     user,
+    users,
     loading,
     error,
     updateUsuario,
     changePassword,
-    users,
+    createAuxUser,
     refetchUsers,
     deleteUsuario,
   };
