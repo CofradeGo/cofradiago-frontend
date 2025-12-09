@@ -1,23 +1,38 @@
 // src/pages/UserPage.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { UsersList } from "../../components/organisms/UsersList";
+import { CreateAuxUserSection } from "../../components/organisms/CreateAuxUserSection";
 
 export const UsuariosPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"users" | "create">("users");
+  const [sliderStyle, setSliderStyle] = useState<React.CSSProperties>({});
+  const usersTabRef = useRef<HTMLButtonElement>(null);
+  const createTabRef = useRef<HTMLButtonElement>(null);
 
-  // Rol del usuario logueado
   const userStr = localStorage.getItem("user");
   const currentUserRole = userStr ? JSON.parse(userStr).role : "AUXILIAR";
+
+  useEffect(() => {
+    // Ajustar slider dinámicamente según la tab activa
+    const activeRef = activeTab === "users" ? usersTabRef.current : createTabRef.current;
+    if (activeRef) {
+      setSliderStyle({
+        width: activeRef.offsetWidth,
+        left: activeRef.offsetLeft,
+      });
+    }
+  }, [activeTab]);
 
   return (
     <div className="p-6 flex flex-col gap-6">
       {/* Tabs container */}
-      <div className="flex border-b border-gray-200 relative">
+      <div className="flex justify-center border-b border-gray-200 relative overflow-x-auto no-scrollbar">
         {/* Tab: Usuarios */}
         <button
+          ref={usersTabRef}
           onClick={() => setActiveTab("users")}
-          className={`px-4 py-2 font-medium transition-colors duration-300 text-gray-700 hover:text-gray-900 focus:outline-none ${
-            activeTab === "users" ? "text-gray-900" : ""
+          className={`px-6 py-3 font-medium transition-colors duration-300 rounded-t-lg focus:outline-none ${
+            activeTab === "users" ? "text-blue-700" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Usuarios
@@ -25,38 +40,32 @@ export const UsuariosPage: React.FC = () => {
 
         {/* Tab: Crear Usuario */}
         <button
+          ref={createTabRef}
           onClick={() => setActiveTab("create")}
-          className={`ml-4 px-4 py-2 font-medium transition-colors duration-300 text-gray-700 hover:text-gray-900 focus:outline-none ${
-            activeTab === "create" ? "text-gray-900" : ""
+          className={`ml-4 px-6 py-3 font-medium transition-colors duration-300 rounded-t-lg focus:outline-none ${
+            activeTab === "create" ? "text-blue-700" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Crear Usuario
         </button>
 
-        {/* Slider animado debajo de la tab activa */}
+        {/* Slider animado */}
         <div
-          className={`absolute bottom-0 h-1 bg-blue-500 rounded transition-all duration-300`}
-          style={{
-            width: "6rem",
-            left: activeTab === "users" ? "0px" : "6.5rem",
-          }}
+          className="absolute bottom-0 h-1 bg-blue-500 rounded transition-all duration-300"
+          style={{ ...sliderStyle }}
         />
       </div>
 
       {/* Contenido */}
-      <div className="pt-4 transition-opacity duration-500">
+      <div className="pt-6 transition-opacity duration-500">
         {activeTab === "users" && (
           <div className="animate-fadeIn">
             <UsersList currentUserRole={currentUserRole} />
           </div>
         )}
-
         {activeTab === "create" && (
-          <div className="animate-fadeIn flex flex-col items-center justify-center h-64 bg-white rounded-2xl shadow-md p-6 text-gray-700">
-            <h2 className="text-xl font-semibold mb-4">Formulario de creación de usuario</h2>
-            <p className="text-gray-500 text-center">
-              Aquí irá el formulario para crear nuevos usuarios en el futuro.
-            </p>
+          <div className="animate-fadeIn">
+            <CreateAuxUserSection currentUserRole={currentUserRole} />
           </div>
         )}
       </div>
@@ -71,6 +80,9 @@ export const UsuariosPage: React.FC = () => {
           .animate-fadeIn {
             animation: fadeIn 0.3s ease-in-out;
           }
+          /* Quitar scrollbar horizontal invisible */
+          .no-scrollbar::-webkit-scrollbar { display: none; }
+          .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         `}
       </style>
     </div>
