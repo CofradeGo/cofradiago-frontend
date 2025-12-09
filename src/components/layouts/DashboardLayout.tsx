@@ -32,24 +32,22 @@ export const DashboardLayout: React.FC = () => {
       </div>
     );
 
-  // Callback para mostrar toast y ocultarlo automáticamente con animación
   const handleToast = (msg: string) => {
     setToastMessage(msg);
     setShowToast(true);
-
-    setTimeout(() => setShowToast(false), 2500); // fade-out empieza
-    setTimeout(() => setToastMessage(null), 3000); // eliminar del DOM
+    setTimeout(() => setShowToast(false), 2500);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
+      {/* Sidebar fijo siempre */}
       <Sidebar
         role={user.role}
         hermandadName={hermandad.name}
         hermandadLogo={hermandad.logoUrl}
-        className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white shadow-lg transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:shadow-none`}
+        className={`fixed top-0 left-0 h-full z-30 w-64 transform bg-white shadow-lg transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
         onClose={() => setSidebarOpen(false)}
       />
 
@@ -61,16 +59,19 @@ export const DashboardLayout: React.FC = () => {
         />
       )}
 
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <Header
-          username={user.username}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onOpenChangePasswordModal={() => setIsChangePasswordModalOpen(true)}
-        />
+      {/* Contenido principal */}
+      <div className="flex-1 flex flex-col md:ml-64">
+        {/* Header sticky */}
+        <div className="sticky top-0 z-20">
+          <Header
+            username={user.username}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            onOpenChangePasswordModal={() => setIsChangePasswordModalOpen(true)}
+          />
+        </div>
 
-        {/* Main content */}
-        <main className="flex-1 p-6 mt-4 md:mt-0">
+        {/* Main content scrollable */}
+        <main className="flex-1 p-6 mt-4 md:mt-0 overflow-auto">
           <Outlet />
         </main>
       </div>
@@ -82,7 +83,7 @@ export const DashboardLayout: React.FC = () => {
         onSuccess={handleToast}
       />
 
-      {/* Toast flotante centrado arriba con fade-in/out */}
+      {/* Toast centrado */}
       {toastMessage && (
         <div
           className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-md shadow-lg text-white z-50
