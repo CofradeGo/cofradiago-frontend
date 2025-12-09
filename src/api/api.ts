@@ -11,3 +11,9 @@ export const HermandadEndpoints = {
   public: (domain: string) => `/public/hermandad/${domain}`, // público, no requiere API_BASE
   private: (domain: string) => `/hermandad/${domain}`, // privado, Axios usa baseURL + API_BASE
 };
+
+// -------------------- Usuarios --------------------
+export const UserEndpoints = {
+  getAll: `/users`, // GET → devuelve todos los usuarios (DMG) o solo el propio (AUX)
+  updateCurrent: `/users`, // PATCH → actualiza usuario logueado
+};

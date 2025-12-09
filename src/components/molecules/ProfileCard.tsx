@@ -5,13 +5,19 @@ interface ProfileCardProps {
   username: string;
   email: string;
   hermandadName: string;
+  onEdit?: () => void; // Nueva prop opcional para el botón de editar
 }
 
-export const ProfileCard: React.FC<ProfileCardProps> = ({ username, email, hermandadName }) => {
+export const ProfileCard: React.FC<ProfileCardProps> = ({
+  username,
+  email,
+  hermandadName,
+  onEdit,
+}) => {
   return (
     <div
       className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center max-w-md mx-auto mt-10
-                    transition-transform transform hover:-translate-y-1 hover:shadow-2xl"
+                 transition-transform transform hover:-translate-y-1 hover:shadow-2xl"
     >
       {/* Encabezado: Nombre de la Hermandad */}
       <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">{hermandadName}</h2>
@@ -27,12 +33,15 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ username, email, herma
         <p className="text-gray-600">{email}</p>
       </div>
 
-      {/* Futuro botón de Editar */}
-      {
-        <button className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+      {/* Botón de Editar, solo si se pasa la prop onEdit */}
+      {onEdit && (
+        <button
+          onClick={onEdit}
+          className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
           Editar perfil
         </button>
-      }
+      )}
     </div>
   );
 };
