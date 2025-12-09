@@ -1,13 +1,13 @@
-import { NavLink } from "react-router-dom";
-import { Users, Bell, Ticket, LayoutList, Shield, IdCard } from "lucide-react";
+import { NavLink, useParams } from "react-router-dom";
+import { Users, Bell, Ticket, LayoutList, Shield, IdCard, Home } from "lucide-react";
 import CofradeGoLogo from "../../assets/logos/logo-cofradego-black.svg";
 
 interface SidebarProps {
   role: "DMG" | "AUXILIAR";
   hermandadName: string;
   hermandadLogo?: string;
-  className?: string; // para controlar visibilidad en mobile
-  onClose?: () => void; // cerrar sidebar al hacer click en mobile
+  className?: string; // para mobile toggle
+  onClose?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -17,20 +17,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
   className,
   onClose,
 }) => {
+  const { domain } = useParams<{ domain: string }>();
+
   const DMG_MENU = [
-    { label: "Usuarios", to: "/usuarios", icon: <Users className="w-5 h-5" /> },
-    { label: "Hermandad", to: "/hermandad", icon: <Shield className="w-5 h-5" /> },
-    { label: "Hermanos", to: "/usuarios", icon: <IdCard className="w-5 h-5" /> },
-    { label: "Cofradía", to: "/cofradia", icon: <LayoutList className="w-5 h-5" /> },
-    { label: "Papeletas de sitio", to: "/papeletas", icon: <Ticket className="w-5 h-5" /> },
-    { label: "Notificaciones", to: "/notificaciones", icon: <Bell className="w-5 h-5" /> },
+    { label: "Inicio", to: "/", icon: <Home className="w-5 h-5" /> },
+    { label: "Usuarios", to: "usuarios", icon: <Users className="w-5 h-5" /> },
+    { label: "Hermandad", to: "hermandad", icon: <Shield className="w-5 h-5" /> },
+    { label: "Hermanos", to: "hermanos", icon: <IdCard className="w-5 h-5" /> },
+    { label: "Cofradía", to: "cofradia", icon: <LayoutList className="w-5 h-5" /> },
+    { label: "Papeletas de sitio", to: "papeletas", icon: <Ticket className="w-5 h-5" /> },
+    { label: "Notificaciones", to: "notificaciones", icon: <Bell className="w-5 h-5" /> },
   ];
 
   const AUX_MENU = [
-    { label: "Hermanos", to: "/usuarios", icon: <IdCard className="w-5 h-5" /> },
-    { label: "Cofradía", to: "/cofradia", icon: <LayoutList className="w-5 h-5" /> },
-    { label: "Papeletas de sitio", to: "/papeletas", icon: <Ticket className="w-5 h-5" /> },
-    { label: "Notificaciones", to: "/notificaciones", icon: <Bell className="w-5 h-5" /> },
+    { label: "Inicio", to: "/", icon: <Home className="w-5 h-5" /> },
+    { label: "Hermanos", to: "hermanos", icon: <IdCard className="w-5 h-5" /> },
+    { label: "Cofradía", to: "cofradia", icon: <LayoutList className="w-5 h-5" /> },
+    { label: "Papeletas de sitio", to: "papeletas", icon: <Ticket className="w-5 h-5" /> },
+    { label: "Notificaciones", to: "notificaciones", icon: <Bell className="w-5 h-5" /> },
   ];
 
   const MENU = role === "DMG" ? DMG_MENU : AUX_MENU;
@@ -39,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       className={`h-screen w-64 bg-white border-r border-gray-200 flex flex-col justify-between ${className}`}
     >
-      {/* Cerrar en mobile */}
+      {/* Cerrar mobile */}
       {onClose && (
         <div className="flex justify-end p-2 md:hidden">
           <button onClick={onClose} className="text-gray-700 focus:outline-none">
@@ -73,11 +77,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {MENU.map((item) => (
             <li key={item.to}>
               <NavLink
-                to={item.to}
+                to={`/${domain}/dashboard/${item.to}`}
                 className={({ isActive }) =>
                   `flex items-center gap-3 w-full px-4 py-2 rounded-xl transition-all
-                  text-gray-700 hover:bg-gray-100 hover:text-gray-900
-                  ${isActive ? "bg-gray-100 font-semibold" : ""}`
+                   text-gray-700 hover:bg-gray-100 hover:text-gray-900
+                   ${isActive ? "bg-gray-100 font-semibold" : ""}`
                 }
                 onClick={onClose}
               >
@@ -89,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </ul>
       </nav>
 
-      {/* Branding abajo */}
+      {/* Branding */}
       <div className="flex flex-col items-center justify-center pb-4 mt-auto text-gray-400">
         <img
           src={CofradeGoLogo}

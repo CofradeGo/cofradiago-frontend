@@ -36,6 +36,8 @@ export const useLogin = (domain: string) => {
       localStorage.setItem("accessToken", res.data.accessToken);
       const user: DecodedToken = jwtDecode(res.data.accessToken);
       localStorage.setItem("user", JSON.stringify(user));
+      // Guardamos el dominio
+      localStorage.setItem("domain", domain);
 
       return user;
     } catch (err) {

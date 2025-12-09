@@ -39,7 +39,7 @@ export const DashboardLayout: React.FC = () => {
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Overlay mobile */}
+      {/* Overlay móvil */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black opacity-50 md:hidden"
@@ -49,11 +49,7 @@ export const DashboardLayout: React.FC = () => {
 
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <Header
-          username={user.username}
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        />
+        <Header username={user.username} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
         {/* Main content */}
         <main className="flex-1 p-6 mt-4 md:mt-0">
