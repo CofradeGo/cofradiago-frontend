@@ -43,7 +43,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <form className="w-full flex flex-col space-y-4" onSubmit={handleSubmit}>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-500 text-sm">Usuario o contraseña no válidos</p>}
 
       <InputField
         type="text"

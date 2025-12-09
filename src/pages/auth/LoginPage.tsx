@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { LoginLayout } from "../components/layouts/LoginLayout";
-import CofradeGoLogo from "../assets/logos/logo-cofradego.svg";
-import { useHermandad } from "../hooks/useHermandad";
-import { useLogin } from "../hooks/useLogin";
-import { LoginForm } from "../components/organisms/LoginForm";
+import { LoginLayout } from "../../components/layouts/LoginLayout";
+import CofradeGoLogo from "../../assets/logos/logo-cofradego.svg";
+import { useHermandad } from "../..//hooks/useHermandad";
+import { useLogin } from "../..//hooks/useLogin";
+import { LoginForm } from "../..//components/organisms/LoginForm";
 
 export const LoginPage: React.FC = () => {
   const { domain } = useParams<{ domain: string }>();

@@ -1,6 +1,4 @@
-// src/config/api.ts
 export const API_BASE = import.meta.env.VITE_API_BASE;
-
 // -------------------- Auth --------------------
 export const AuthEndpoints = {
   login: (domain: string) => `/auth/login/${domain}`, // relativo, Axios se une con baseURL
