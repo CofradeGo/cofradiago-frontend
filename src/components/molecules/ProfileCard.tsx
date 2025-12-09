@@ -9,7 +9,10 @@ interface ProfileCardProps {
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({ username, email, hermandadName }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center max-w-md mx-auto mt-10">
+    <div
+      className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center max-w-md mx-auto mt-10
+                    transition-transform transform hover:-translate-y-1 hover:shadow-2xl"
+    >
       {/* Encabezado: Nombre de la Hermandad */}
       <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">{hermandadName}</h2>
 
