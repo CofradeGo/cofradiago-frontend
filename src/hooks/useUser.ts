@@ -22,6 +22,7 @@ interface UseUsuarioReturn {
   changePassword: (data: ChangePasswordPayload) => Promise<void>;
   users: User[] | null;
   refetchUsers: () => void;
+  deleteUsuario: (id: number) => Promise<string>;
 }
 
 export const useUsuario = (): UseUsuarioReturn => {
@@ -127,5 +128,39 @@ export const useUsuario = (): UseUsuarioReturn => {
     fetchUsers();
   }, []);
 
-  return { user, loading, error, updateUsuario, changePassword, users, refetchUsers };
+  // DELETE USER
+  const deleteUsuario = async (id: number): Promise<string> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axiosClient.patch<{ message: string }>(UserEndpoints.deleteUser(id), {
+        withCredentials: true,
+      });
+      // Refrescar lista tras eliminar
+      fetchUsers();
+      return res.data.message;
+    } catch (err) {
+      let msg = "Error al eliminar usuario";
+      if (axios.isAxiosError(err)) {
+        msg = err.response?.data?.message || msg;
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    user,
+    loading,
+    error,
+    updateUsuario,
+    changePassword,
+    users,
+    refetchUsers,
+    deleteUsuario,
+  };
 };

@@ -16,4 +16,5 @@ export const HermandadEndpoints = {
 export const UserEndpoints = {
   getAll: `/users`, // GET → devuelve todos los usuarios (DMG) o solo el propio (AUX)
   updateCurrent: `/users`, // PATCH → actualiza usuario logueado
+  deleteUser: (id: number) => `/users/${id}`, // DELETE → desactiva usuario
 };
