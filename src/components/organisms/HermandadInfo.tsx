@@ -1,5 +1,3 @@
-// src/components/organisms/HermandadInfo.tsx
-
 import React from "react";
 import { FiMail, FiEdit, FiImage } from "react-icons/fi";
 import type { Hermandad } from "../../types/Hermandad";

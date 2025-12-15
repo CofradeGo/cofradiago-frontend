@@ -4,7 +4,8 @@ interface LoginLayoutProps {
   cofradeLogo: string;
   hdadLogo: string;
   hdadName: string;
-  children?: React.ReactNode; // el formulario o cualquier contenido dinámico
+  children?: React.ReactNode;
+  onForgotClick?: () => void; // opcional
 }
 
 export const LoginLayout: React.FC<LoginLayoutProps> = ({
@@ -12,6 +13,7 @@ export const LoginLayout: React.FC<LoginLayoutProps> = ({
   hdadLogo,
   hdadName,
   children,
+  onForgotClick,
 }) => {
   return (
     <div className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2 bg-gray-50">
@@ -29,12 +31,15 @@ export const LoginLayout: React.FC<LoginLayoutProps> = ({
 
           {/* Footer */}
           <div className="w-full mt-6 flex items-center justify-between text-sm">
-            <button
-              type="button"
-              className="text-indigo-600 hover:underline hover:text-indigo-700 transition"
-            >
-              Olvidé mi contraseña
-            </button>
+            {onForgotClick && (
+              <button
+                type="button"
+                className="text-indigo-600 hover:underline hover:text-indigo-700 transition"
+                onClick={onForgotClick}
+              >
+                Olvidé mi contraseña
+              </button>
+            )}
             <span className="text-gray-400">&copy; 2025 CofradeGO</span>
           </div>
         </div>
