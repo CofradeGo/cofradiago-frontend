@@ -60,7 +60,7 @@ export const EditHermandadModal: React.FC<EditHermandadModalProps> = ({
     const formData = new FormData();
     formData.append("name", name);
     formData.append("officialEmail", email);
-    if (logoFile) formData.append("logoUrl", logoFile);
+    if (logoFile) formData.append("logo", logoFile);
 
     try {
       setLoading(true);
