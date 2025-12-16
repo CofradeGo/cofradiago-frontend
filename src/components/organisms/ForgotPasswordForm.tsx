@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useForgotPassword } from "../../hooks/useForgotPassword";
 
 interface ForgotPasswordFormProps {
   domain: string;
@@ -7,50 +8,53 @@ interface ForgotPasswordFormProps {
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ domain, onBack }) => {
   const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+
+  // 🔹 Hook de forgot password
+  const { loading, error, success, sendForgotPassword } = useForgotPassword();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage(null);
-    setError(null);
 
-    try {
-      await fetch(`/api/v1/password/forgot`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, domain }),
-      });
-      setMessage(
-        "Si el usuario existe, se ha enviado un email con instrucciones para recuperar la contraseña",
-      );
-    } catch {
-      setError("Ocurrió un error, inténtalo de nuevo");
-    } finally {
-      setLoading(false);
+    // Validaciones
+    if (!domain) {
+      alert("No se pudo determinar la hermandad. Revisa la URL.");
+      return;
     }
+
+    if (!username.trim()) {
+      alert("Introduce tu nombre de usuario.");
+      return;
+    }
+
+    await sendForgotPassword({ username: username.trim(), domain });
   };
 
   return (
     <form className="w-full flex flex-col space-y-4" onSubmit={handleSubmit}>
+      {/* Mensajes */}
       {error && <p className="text-red-500 text-sm">{error}</p>}
-      {message && <p className="text-green-500 text-sm">{message}</p>}
+      {success && <p className="text-green-500 text-sm">{success}</p>}
 
+      {/* Input usuario */}
       <input
         type="text"
         placeholder="Nombre de usuario"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         className="border rounded p-2"
-        disabled={loading}
+        disabled={loading || !!success}
       />
 
-      <button type="submit" disabled={loading} className="bg-indigo-600 text-white p-2 rounded">
+      {/* Botón enviar */}
+      <button
+        type="submit"
+        disabled={loading || !!success || !domain}
+        className="bg-indigo-600 text-white p-2 rounded"
+      >
         {loading ? "Enviando..." : "Enviar instrucciones"}
       </button>
 
+      {/* Botón cancelar */}
       <button type="button" className="text-gray-500 mt-2 hover:underline" onClick={onBack}>
         Cancelar
       </button>
