@@ -17,6 +17,7 @@ import { PerfilPage } from "./pages/Perfil/PerfilPage";
 
 import { RoleProtectedRoute } from "./routes/RoleProtectedRoute";
 import { PrivateRoute } from "./routes/PrivateRoute";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 
 // Componente que redirige a dashboard de manera segura
 const RedirectToDashboard: React.FC = () => {
@@ -113,6 +114,9 @@ export const App: React.FC = () => {
 
       {/* Cualquier otra ruta pública inválida */}
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* Ruta para el reseteo de pass */}
+      <Route path="/:domain/reset-password" element={<ResetPasswordPage />} />
     </Routes>
   );
 };

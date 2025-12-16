@@ -19,3 +19,9 @@ export const UserEndpoints = {
   deleteUser: (id: number) => `/users/${id}`, // DELETE → desactiva usuario
   registerAux: `/users/register`, // POST → crea un nuevo usuario AUX
 };
+
+// -------------------- Password / Recuperación --------------------
+export const PasswordEndpoints = {
+  forgot: `/password/forgot`, // POST → enviar email con token
+  reset: `/password/reset`, // POST → cambiar contraseña usando token
+};
