@@ -25,3 +25,8 @@ export const PasswordEndpoints = {
   forgot: `/password/forgot`, // POST → enviar email con token
   reset: `/password/reset`, // POST → cambiar contraseña usando token
 };
+
+// -------------------- Hermanos --------------------
+export const HermanoEndpoints = {
+  list: `/hermanos`, // GET → listado de hermanos de la hermandad activa (por token)
+};
