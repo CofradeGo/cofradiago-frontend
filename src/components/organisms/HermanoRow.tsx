@@ -1,5 +1,5 @@
 import React from "react";
-import type { HermanoListado } from "../../types/hermano";
+import type { HermanoListado } from "../../types/Hermano";
 
 interface HermanoRowProps {
   hermano: HermanoListado;
