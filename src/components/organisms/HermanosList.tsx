@@ -1,5 +1,5 @@
 import React from "react";
-import type { HermanoListado } from "../../types/hermano";
+import type { HermanoListado } from "../../types/Hermano";
 import { HermanoRow } from "./HermanoRow";
 import { Users } from "lucide-react";
 

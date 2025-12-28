@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import axiosClient from "../api/axiosClient";
-import type { HermanosListResponse, HermanoListado } from "../types/hermano";
+import type { HermanosListResponse, HermanoListado } from "../types/Hermano";
 
 /* ============================
    Tipos
