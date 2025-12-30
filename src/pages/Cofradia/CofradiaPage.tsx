@@ -8,8 +8,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { ActionButton } from "../../components/atoms/ActionButton";
 
 export const CofradiaPage: React.FC = () => {
-  const { cofradiasActivas, historico, loading, error } = useCofradias();
-
+  const { cofradiasActivas, historico, loading, error, refetch, updateCofradia } = useCofradias();
   const [user, setUser] = useState(getUserFromStorage());
   const isDMG = user?.role === "DMG";
 
@@ -31,11 +30,7 @@ export const CofradiaPage: React.FC = () => {
 
   // Escucha cambios en localStorage (logout/login)
   useEffect(() => {
-    const handleStorageChange = () => {
-      const updatedUser = getUserFromStorage();
-      console.log("Usuario actualizado:", updatedUser);
-      setUser(updatedUser);
-    };
+    const handleStorageChange = () => setUser(getUserFromStorage());
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
@@ -86,6 +81,7 @@ export const CofradiaPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
+      {/* Header con botón crear cofradía */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Cofradía</h1>
@@ -111,11 +107,16 @@ export const CofradiaPage: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {currentCofradiasActiva.map((c) => (
-                  <CofradiaActivaCard key={c.id} cofradia={c} isDMG={!!isDMG} />
+                  <CofradiaActivaCard
+                    key={c.id}
+                    cofradia={c}
+                    isDMG={!!isDMG}
+                    updateCofradia={updateCofradia}
+                    onUpdated={refetch}
+                  />
                 ))}
               </div>
             )}
-
             {renderPagination(currentPageActiva, totalPagesActiva, setCurrentPageActiva)}
           </>
         }
@@ -124,9 +125,8 @@ export const CofradiaPage: React.FC = () => {
             {currentCofradiasHistorico.length === 0 ? (
               <p className="text-gray-500">No hay cofradías cerradas</p>
             ) : (
-              <CofradiasHistoricoTable cofradias={currentCofradiasHistorico} />
+              <CofradiasHistoricoTable cofradias={currentCofradiasHistorico} onUpdated={refetch} />
             )}
-
             {historico.length > pageSizeHistorico &&
               renderPagination(currentPageHistorico, totalPagesHistorico, setCurrentPageHistorico)}
           </>

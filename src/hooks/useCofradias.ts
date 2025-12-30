@@ -15,15 +15,12 @@ export const useCofradias = () => {
       setError(null);
 
       const [activaRes, historicoRes] = await Promise.all([
-        axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, {
-          params: { estado: "ABIERTA" },
-        }),
+        axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, { params: { estado: "ABIERTA" } }),
         axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, {
           params: { estado: "CERRADA", order: "desc" },
         }),
       ]);
 
-      // Guardamos todas las activas en vez de solo la primera
       setCofradiasActivas(activaRes.data);
       setHistorico(historicoRes.data);
     } catch (err) {
@@ -31,6 +28,31 @@ export const useCofradias = () => {
       setError("No se pudieron cargar las cofradías");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para actualizar cualquier cofradía (editar o cerrar)
+  const updateCofradia = async (cofradiaId: number, data: Partial<Cofradia>) => {
+    try {
+      const res = await axiosClient.put(CofradiaEndpoints.update(cofradiaId), data);
+
+      // Actualizar estado local según el estado de la cofradía
+      if (data.estado === "CERRADA") {
+        // Pasar de activas a histórico
+        setCofradiasActivas((prev) => prev.filter((c) => c.id !== cofradiaId));
+        setHistorico((prev) => [res.data.cofradia, ...prev]);
+      } else {
+        // Editar datos de cofradía en el array correspondiente
+        setCofradiasActivas((prev) =>
+          prev.map((c) => (c.id === cofradiaId ? res.data.cofradia : c)),
+        );
+        setHistorico((prev) => prev.map((c) => (c.id === cofradiaId ? res.data.cofradia : c)));
+      }
+
+      return res.data.cofradia;
+    } catch (err) {
+      console.error("Error actualizando cofradía", err);
+      throw err;
     }
   };
 
@@ -44,5 +66,6 @@ export const useCofradias = () => {
     loading,
     error,
     refetch: fetchCofradias,
+    updateCofradia,
   };
 };
