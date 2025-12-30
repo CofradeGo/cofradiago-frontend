@@ -4,7 +4,8 @@ import { CofradiaActivaCard } from "../../components/organisms/CofradiaActivaCar
 import { CofradiasHistoricoTable } from "../../components/organisms/CofradiasHistoricoTable";
 import { CofradiaPageLayout } from "../../components/layouts/CofradiaPageLayout";
 import { getUserFromStorage } from "../../utils/authToken";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ActionButton } from "../../components/atoms/ActionButton";
 
 export const CofradiaPage: React.FC = () => {
   const { cofradiasActivas, historico, loading, error } = useCofradias();
@@ -85,8 +86,22 @@ export const CofradiaPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-3xl font-bold mb-6">Cofradía</h1>
-      <p className="text-gray-600 mb-8">Gestión de la cofradía y sus actividades.</p>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Cofradía</h1>
+          <p className="text-gray-600">Gestión de la cofradía y sus actividades.</p>
+        </div>
+
+        {isDMG && (
+          <ActionButton
+            label="Crear nueva cofradía"
+            onClick={() => console.log("Crear nueva cofradía")}
+            className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 shadow-md rounded-md"
+          >
+            <Plus className="w-4 h-4" />
+          </ActionButton>
+        )}
+      </div>
 
       <CofradiaPageLayout
         activa={
