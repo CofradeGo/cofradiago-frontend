@@ -14,18 +14,18 @@ import { CofradiaPage } from "./pages/Cofradia/CofradiaPage";
 import { PapeletaPage } from "./pages/Papeleta/PapeletaPage";
 import { NotificacionesPage } from "./pages/Notificaciones/NotificacionesPage";
 import { PerfilPage } from "./pages/Perfil/PerfilPage";
+import { GestionCofradiaPage } from "./pages/Cofradia/GestionCofradiaPage";
 
 import { RoleProtectedRoute } from "./routes/RoleProtectedRoute";
 import { PrivateRoute } from "./routes/PrivateRoute";
 import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 
-// Componente que redirige a dashboard de manera segura
+// Redirección segura al dashboard
 const RedirectToDashboard: React.FC = () => {
   const { domain } = useParams<{ domain: string }>();
   const userStr = localStorage.getItem("user");
 
   if (!userStr) {
-    // Si no está logueado, lleva al login del dominio actual o raíz
     return <Navigate to={`/${domain || ""}/login`} replace />;
   }
 
@@ -54,7 +54,29 @@ export const App: React.FC = () => {
           </PrivateRoute>
         }
       >
+        {/* Ruta principal del dashboard */}
         <Route index element={<DashboardPage />} />
+
+        {/* Rutas específicas primero */}
+        <Route
+          path="cofradia/:cofradiaId/gestionar"
+          element={
+            <RoleProtectedRoute allowedRoles={["DMG"]}>
+              <GestionCofradiaPage />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* Rutas genéricas después */}
+        <Route
+          path="cofradia"
+          element={
+            <RoleProtectedRoute allowedRoles={["DMG", "AUXILIAR"]}>
+              <CofradiaPage />
+            </RoleProtectedRoute>
+          }
+        />
+
         <Route
           path="usuarios"
           element={
@@ -80,14 +102,6 @@ export const App: React.FC = () => {
           }
         />
         <Route
-          path="cofradia"
-          element={
-            <RoleProtectedRoute allowedRoles={["DMG", "AUXILIAR"]}>
-              <CofradiaPage />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
           path="papeletas"
           element={
             <RoleProtectedRoute allowedRoles={["DMG", "AUXILIAR"]}>
@@ -105,17 +119,17 @@ export const App: React.FC = () => {
         />
         <Route path="perfil" element={<PerfilPage />} />
 
-        {/* Cualquier ruta inválida dentro de dashboard → redirige a dashboard */}
+        {/* Ruta comodín dentro del dashboard */}
         <Route path="*" element={<DashboardPage />} />
       </Route>
 
-      {/* Redirección global de cualquier ruta inválida dentro de un dominio */}
+      {/* Redirección global para rutas inválidas dentro del dominio */}
       <Route path="/:domain/*" element={<RedirectToDashboard />} />
 
-      {/* Cualquier otra ruta pública inválida */}
+      {/* Redirección global para cualquier otra ruta */}
       <Route path="*" element={<Navigate to="/" replace />} />
 
-      {/* Ruta para el reseteo de pass */}
+      {/* Reseteo de contraseña */}
       <Route path="/:domain/reset-password" element={<ResetPasswordPage />} />
     </Routes>
   );

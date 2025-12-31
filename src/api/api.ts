@@ -38,3 +38,11 @@ export const CofradiaEndpoints = {
   update: (id: number) => `/cofradia/${id}`, // PUT → actualizar cofradía (DMG)
   delete: (id: number) => `/cofradia/${id}`, // DELETE → borrar cofradía (DMG)
 };
+
+// -------------------- Cortejos --------------------
+export const CortejoEndpoints = {
+  listByCofradia: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos`, // GET → listado de cortejos de una cofradía
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos`, // POST → crear cortejo (DMG)
+  update: (cortejoId: number) => `/cortejos/${cortejoId}`, // PUT → actualizar cortejo (DMG)
+  delete: (cortejoId: number) => `/cortejos/${cortejoId}`, // DELETE → borrar cortejo (DMG)
+};

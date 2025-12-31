@@ -8,6 +8,7 @@ import { isAxiosError } from "axios";
 import axiosClient from "../../api/axiosClient";
 import { CofradiaEndpoints } from "../../api/api";
 import { ClonarCofradiaModal } from "./ClonarCofradiaModal";
+import { Link } from "react-router-dom";
 
 interface Props {
   cofradia: Cofradia | null;
@@ -118,7 +119,12 @@ export const CofradiaActivaCard = ({ cofradia, isDMG, updateCofradia, onUpdated 
 
             {menuOpen && (
               <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-10">
-                <button className="w-full text-left px-4 py-2 hover:bg-gray-100">Gestionar</button>
+                <Link
+                  to={`${cofradia.id}/gestionar`}
+                  className="w-full text-left block px-4 py-2 hover:bg-gray-100"
+                >
+                  Gestionar
+                </Link>
                 <button className="w-full text-left px-4 py-2 hover:bg-gray-100">Editar</button>
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
