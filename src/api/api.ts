@@ -46,3 +46,19 @@ export const CortejoEndpoints = {
   update: (cortejoId: number) => `/cortejos/${cortejoId}`, // PUT → actualizar cortejo (DMG)
   delete: (cortejoId: number) => `/cortejos/${cortejoId}`, // DELETE → borrar cortejo (DMG)
 };
+
+// -------------------- Puestos --------------------
+export const PuestoEnpoints = {
+  list: (cofradiaId: number) => `/cofradias/${cofradiaId}/puestos`,
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/puestos`,
+  update: (cofradiaId: number, puestoId: number) => `/cofradias/${cofradiaId}/puestos/${puestoId}`,
+  delete: (cofradiaId: number, puestoId: number) => `/cofradias/${cofradiaId}/puestos/${puestoId}`,
+};
+
+// -------------------- Cargos --------------------
+export const CargoEndpoints = {
+  list: (cofradiaId: number) => `/cofradias/${cofradiaId}/cargos`,
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/cargos`,
+  update: (cofradiaId: number, cargoId: number) => `/cofradias/${cofradiaId}/cargos/${cargoId}`,
+  delete: (cofradiaId: number, cargoId: number) => `/cofradias/${cofradiaId}/cargos/${cargoId}`,
+};
