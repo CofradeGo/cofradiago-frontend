@@ -1,18 +1,18 @@
 import React from "react";
 
-export type ListCardType = "puestos" | "cargos";
+type ListCardType = "puestos" | "cargos" | "insignias" | "tramos";
 
 export interface ListItemUI {
   id: number;
   title: string;
-  subtitle?: string;
+  subtitle?: string; // Aquí pondremos los elementos si es insignia
 }
 
 interface Props {
   type: ListCardType;
   items: ListItemUI[];
   onAdd: () => void;
-  onEdit: (id: number) => void;
+  onEdit?: (id: number) => void; // opcional
 }
 
 const typeConfig: Record<ListCardType, { label: string; buttonClasses: string }> = {
@@ -25,6 +25,16 @@ const typeConfig: Record<ListCardType, { label: string; buttonClasses: string }>
     label: "Cargos",
     buttonClasses:
       "px-4 py-2 text-sm font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full shadow hover:from-green-600 hover:to-green-700 transition-all",
+  },
+  insignias: {
+    label: "Insignias",
+    buttonClasses:
+      "px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-full shadow hover:from-purple-600 hover:to-purple-700 transition-all",
+  },
+  tramos: {
+    label: "Tramos",
+    buttonClasses:
+      "px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-full shadow hover:from-purple-600 hover:to-purple-700 transition-all",
   },
 };
 
@@ -61,15 +71,21 @@ export const ListCard: React.FC<Props> = ({ type, items, onAdd, onEdit }) => {
             >
               <div className="flex flex-col">
                 <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                {item.subtitle && <p className="text-xs text-gray-500">{item.subtitle}</p>}
+
+                {/* Renderizamos subtitle con saltos de línea si existen */}
+                {item.subtitle && (
+                  <p className="text-xs text-gray-500 whitespace-pre-line">{item.subtitle}</p>
+                )}
               </div>
 
-              <button
-                onClick={() => onEdit(item.id)}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-              >
-                Editar
-              </button>
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(item.id)}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                >
+                  Editar
+                </button>
+              )}
             </div>
           ))}
         </div>

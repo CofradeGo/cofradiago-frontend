@@ -62,3 +62,36 @@ export const CargoEndpoints = {
   update: (cofradiaId: number, cargoId: number) => `/cofradias/${cofradiaId}/cargos/${cargoId}`,
   delete: (cofradiaId: number, cargoId: number) => `/cofradias/${cofradiaId}/cargos/${cargoId}`,
 };
+
+// -------------------- Tramos --------------------
+export const TramoEndpoints = {
+  list: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos`,
+
+  create: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos`,
+
+  update: (cofradiaId: number, cortejoId: number, tramoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}`,
+
+  delete: (cofradiaId: number, cortejoId: number, tramoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}`,
+};
+
+// -------------------- Insignias --------------------
+export const InsigniaEndpoints = {
+  list: (cofradiaId: number) => `/cofradias/${cofradiaId}/insignias`,
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/insignias`,
+  update: (cofradiaId: number, insigniaId: number) =>
+    `/cofradias/${cofradiaId}/insignias/${insigniaId}`,
+  delete: (cofradiaId: number, insigniaId: number) =>
+    `/cofradias/${cofradiaId}/insignias/${insigniaId}`,
+};
+
+// -------------------- Elementos de Insignia --------------------
+export const ElementoInsigniaEndpoints = {
+  list: (insigniaId: number) => `/cofradias/insignias/${insigniaId}/elementos`,
+  create: (insigniaId: number) => `/cofradias/insignias/${insigniaId}/elementos`,
+  update: (elementoId: number) => `/cofradias/elementos/${elementoId}`,
+  delete: (elementoId: number) => `/cofradias/elementos/${elementoId}`,
+};

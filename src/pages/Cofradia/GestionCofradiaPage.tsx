@@ -5,7 +5,9 @@ import { CofradiaHeader } from "../../components/molecules/CofradiaHeader";
 import { useCortejos } from "../../hooks/useCortejo";
 import { CortejosCarousel } from "../../components/organisms/CortejosCarousel";
 import { usePuestos } from "../../hooks/usePuesto";
-import { useCargos } from "../../hooks/useCargo"; // 🚀 Hook de cargos
+import { useCargos } from "../../hooks/useCargo";
+import { useInsigniasWithElements } from "../../hooks/useInsigniasConElementos";
+import { useTramos } from "../../hooks/useTramos";
 import { ListCard } from "../../components/organisms/ListCard";
 import type { Cofradia } from "../../types/Cofradia";
 
@@ -13,7 +15,6 @@ export const GestionCofradiaPage: React.FC = () => {
   const { cofradiaId } = useParams<{ cofradiaId: string }>();
   const { cofradiasActivas, loading, error } = useCofradias();
 
-  // Cofradía seleccionada
   const cofradia: Cofradia | null = React.useMemo(() => {
     if (!cofradiaId) return null;
     const id = Number(cofradiaId);
@@ -21,24 +22,29 @@ export const GestionCofradiaPage: React.FC = () => {
     return cofradiasActivas.find((c) => c.id === id) || null;
   }, [cofradiaId, cofradiasActivas]);
 
-  // Cortejos
+  // Hooks principales
   const {
     cortejos,
     loading: loadingCortejos,
     error: errorCortejos,
   } = useCortejos(cofradia?.id || 0);
 
-  // Puestos
   const { puestosUI, loading: loadingPuestos, error: errorPuestos } = usePuestos(cofradia?.id || 0);
-
-  // Cargos
   const { cargosUI, loading: loadingCargos, error: errorCargos } = useCargos(cofradia?.id || 0);
+
+  // ===================== INSIGNIAS =====================
+  const { insigniasUI } = useInsigniasWithElements(cofradia?.id || 0);
+
+  // ===================== TRAMOS =====================
+  // Elegimos el primer cortejo para cargar sus tramos (puedes cambiarlo según necesidad)
+  const cortejoId = cortejos[0]?.id || 0;
+  const { tramosUI } = useTramos(cofradia?.id || 0, cortejoId);
 
   if (loading) return <p>Cargando cofradía...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
   if (!cofradia) return <p className="text-gray-600">Cofradía no encontrada</p>;
 
-  // ================= Handlers =================
+  // ===================== Handlers =====================
   const handleEditCofradia = () => console.log("Editar cofradía", cofradia.id);
   const handleDeleteCofradia = () => console.log("Eliminar cofradía", cofradia.id);
   const handleCloneCofradia = () => console.log("Clonar cofradía", cofradia.id);
@@ -54,7 +60,13 @@ export const GestionCofradiaPage: React.FC = () => {
   const handleAddCargo = () => console.log("Añadir cargo");
   const handleEditCargo = (id: number) => console.log("Editar cargo", id);
 
-  // ================= Render =================
+  const handleAddInsignia = () => console.log("Añadir insignia");
+  const handleEditInsignia = (id: number) => console.log("Editar insignia", id);
+
+  const handleAddTramo = () => console.log("Añadir tramo");
+  const handleEditTramo = (id: number) => console.log("Editar tramo", id);
+
+  // ===================== Render =====================
   return (
     <div className="space-y-6">
       {/* Cabecera */}
@@ -87,7 +99,6 @@ export const GestionCofradiaPage: React.FC = () => {
       <section className="p-4 bg-white rounded shadow">
         <h2 className="text-xl font-bold mb-4">Puestos / Cargos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Card Puestos */}
           {loadingPuestos ? (
             <p>Cargando puestos...</p>
           ) : errorPuestos ? (
@@ -101,7 +112,6 @@ export const GestionCofradiaPage: React.FC = () => {
             />
           )}
 
-          {/* Card Cargos */}
           {loadingCargos ? (
             <p>Cargando cargos...</p>
           ) : errorCargos ? (
@@ -109,7 +119,7 @@ export const GestionCofradiaPage: React.FC = () => {
           ) : (
             <ListCard
               type="cargos"
-              items={cargosUI} // recuerda importar cargosUI desde el hook useCargos
+              items={cargosUI}
               onEdit={handleEditCargo}
               onAdd={handleAddCargo}
             />
@@ -117,10 +127,26 @@ export const GestionCofradiaPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Papeleta de Sitio */}
+      {/* Insignias y Tramos */}
       <section className="p-4 bg-white rounded shadow">
-        <h2 className="text-xl font-bold mb-2">Papeleta de Sitio</h2>
-        <p className="text-gray-500">Formulario de papeleta en construcción...</p>
+        <h2 className="text-xl font-bold mb-4">Insignias y Tramos</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Insignias */}
+          <ListCard
+            type="insignias"
+            items={insigniasUI}
+            onEdit={handleEditInsignia}
+            onAdd={handleAddInsignia}
+          />
+
+          {/* Tramos */}
+          <ListCard
+            type="insignias" // reutilizamos estilo, puedes crear type="tramos" si quieres
+            items={tramosUI}
+            onEdit={handleEditTramo}
+            onAdd={handleAddTramo}
+          />
+        </div>
       </section>
 
       {/* Hermanos */}

@@ -7,7 +7,6 @@ import type { Puesto, PuestoUI } from "../types/Puesto";
 /* =====================================================
    TIPOS
 ===================================================== */
-
 interface ApiErrorResponse {
   message?: string;
 }
@@ -25,7 +24,6 @@ interface UpdatePuestoInput {
 /* =====================================================
    ADAPTADOR DOMINIO → UI
 ===================================================== */
-
 const mapPuestoToUI = (p: Puesto): PuestoUI => ({
   id: p.id,
   title: p.nombre,
@@ -35,7 +33,6 @@ const mapPuestoToUI = (p: Puesto): PuestoUI => ({
 /* =====================================================
    HOOK
 ===================================================== */
-
 export const usePuestos = (cofradiaId: number) => {
   const [puestos, setPuestos] = useState<Puesto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,12 +40,14 @@ export const usePuestos = (cofradiaId: number) => {
 
   /* ================= LISTAR ================= */
   const fetchPuestos = useCallback(async () => {
+    // ✅ No hacemos fetch si cofradiaId es inválido
+    if (!cofradiaId || cofradiaId <= 0) return;
+
     try {
       setLoading(true);
       setError(null);
 
       const response = await axiosClient.get<Puesto[]>(PuestoEnpoints.list(cofradiaId));
-
       setPuestos(response.data);
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
@@ -66,6 +65,8 @@ export const usePuestos = (cofradiaId: number) => {
 
   /* ================= CREAR ================= */
   const createPuesto = async (input: CreatePuestoInput): Promise<PuestoUI> => {
+    if (!cofradiaId || cofradiaId <= 0) throw new Error("ID de cofradía inválido");
+
     try {
       setError(null);
 
@@ -82,7 +83,6 @@ export const usePuestos = (cofradiaId: number) => {
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
       const message = axiosError.response?.data?.message ?? "Error al crear el puesto";
-
       setError(message);
       throw new Error(message);
     }
@@ -90,6 +90,8 @@ export const usePuestos = (cofradiaId: number) => {
 
   /* ================= EDITAR ================= */
   const updatePuesto = async (puestoId: number, input: UpdatePuestoInput): Promise<PuestoUI> => {
+    if (!cofradiaId || cofradiaId <= 0) throw new Error("ID de cofradía inválido");
+
     try {
       setError(null);
 
@@ -106,7 +108,6 @@ export const usePuestos = (cofradiaId: number) => {
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
       const message = axiosError.response?.data?.message ?? "Error al editar el puesto";
-
       setError(message);
       throw new Error(message);
     }
@@ -114,16 +115,16 @@ export const usePuestos = (cofradiaId: number) => {
 
   /* ================= BORRAR ================= */
   const deletePuesto = async (puestoId: number): Promise<void> => {
+    if (!cofradiaId || cofradiaId <= 0) throw new Error("ID de cofradía inválido");
+
     try {
       setError(null);
-
       await axiosClient.delete(PuestoEnpoints.delete(cofradiaId, puestoId));
 
       setPuestos((prev) => prev.filter((p) => p.id !== puestoId));
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
       const message = axiosError.response?.data?.message ?? "Error al borrar el puesto";
-
       setError(message);
       throw new Error(message);
     }
@@ -131,7 +132,7 @@ export const usePuestos = (cofradiaId: number) => {
 
   /* ================= API ================= */
   return {
-    puestosUI: puestos.map(mapPuestoToUI), // 👈 SOLO UI SALE DEL HOOK
+    puestosUI: puestos.map(mapPuestoToUI), // ✅ Solo UI para el page
     loading,
     error,
     refetch: fetchPuestos,
