@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
 import { CofradiaEndpoints } from "../api/api";
 import type { Cofradia } from "../types/Cofradia";
+import { isAxiosError } from "axios";
 
 export const useCofradias = () => {
   const [cofradiasActivas, setCofradiasActivas] = useState<Cofradia[]>([]);
   const [historico, setHistorico] = useState<Cofradia[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cloning, setCloning] = useState(false);
+  const [cloneError, setCloneError] = useState<string | null>(null);
 
   const fetchCofradias = async () => {
     try {
@@ -56,6 +59,37 @@ export const useCofradias = () => {
     }
   };
 
+  // Nueva función para clonar cofradía usando el endpoint de clonación
+  const clonarCofradia = async (cofradiaId: number, anioNuevo: number) => {
+    try {
+      setCloning(true);
+      setCloneError(null);
+
+      // ✅ POST al endpoint de clonación
+      const res = await axiosClient.post<{ cofradia: Cofradia }>(
+        CofradiaEndpoints.clone(cofradiaId),
+        { anioNuevo },
+      );
+
+      // ✅ Añadir la nueva cofradía al listado de activas
+      setCofradiasActivas((prev) => [res.data.cofradia, ...prev]);
+
+      return res.data.cofradia;
+    } catch (err: unknown) {
+      console.error("Error clonando cofradía", err);
+
+      if (isAxiosError(err)) {
+        setCloneError(err.response?.data?.message || "Error desconocido al clonar la cofradía");
+      } else {
+        setCloneError("Error desconocido al clonar la cofradía");
+      }
+
+      throw err;
+    } finally {
+      setCloning(false);
+    }
+  };
+
   useEffect(() => {
     fetchCofradias();
   }, []);
@@ -65,6 +99,9 @@ export const useCofradias = () => {
     historico,
     loading,
     error,
+    cloning,
+    cloneError,
+    clonarCofradia,
     refetch: fetchCofradias,
     updateCofradia,
   };

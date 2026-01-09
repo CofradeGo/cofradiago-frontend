@@ -37,6 +37,7 @@ export const CofradiaEndpoints = {
   create: `/cofradia`, // POST → crear cofradía (DMG)
   update: (id: number) => `/cofradia/${id}`, // PUT → actualizar cofradía (DMG)
   delete: (id: number) => `/cofradia/${id}`, // DELETE → borrar cofradía (DMG)
+  clone: (id: number) => `/cofradia/${id}/clonar`, // POST → clonar cofradía (DMG)
 };
 
 // -------------------- Cortejos --------------------

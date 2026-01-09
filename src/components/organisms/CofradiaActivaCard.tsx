@@ -4,20 +4,24 @@ import { EmptyState } from "../atoms/EmptyState";
 import { ActionButton } from "../atoms/ActionButton";
 import { useState, useEffect, useRef } from "react";
 import { MoreHorizontal } from "lucide-react";
-import { isAxiosError } from "axios";
-import axiosClient from "../../api/axiosClient";
-import { CofradiaEndpoints } from "../../api/api";
-import { ClonarCofradiaModal } from "./ClonarCofradiaModal";
 import { Link } from "react-router-dom";
+import { ClonarCofradiaModal } from "./ClonarCofradiaModal";
 
 interface Props {
   cofradia: Cofradia | null;
   isDMG: boolean;
   updateCofradia: (id: number, data: Partial<Cofradia>) => Promise<Cofradia>;
+  clonarCofradia: (cofradiaId: number, anioNuevo: number) => Promise<Cofradia>;
   onUpdated: () => void;
 }
 
-export const CofradiaActivaCard = ({ cofradia, isDMG, updateCofradia, onUpdated }: Props) => {
+export const CofradiaActivaCard: React.FC<Props> = ({
+  cofradia,
+  isDMG,
+  updateCofradia,
+  clonarCofradia,
+  onUpdated,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalCerrarOpen, setModalCerrarOpen] = useState(false);
   const [modalClonarOpen, setModalClonarOpen] = useState(false);
@@ -25,40 +29,31 @@ export const CofradiaActivaCard = ({ cofradia, isDMG, updateCofradia, onUpdated 
   const [errorMessage, setErrorMessage] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Cerrar el menú si clicas fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (!cofradia) {
-    return <EmptyState message="No hay ninguna cofradía activa actualmente" />;
-  }
+  if (!cofradia) return <EmptyState message="No hay ninguna cofradía activa actualmente" />;
 
   const handleMenuAction = (action: string) => {
     setMenuOpen(false);
-    switch (action) {
-      case "Cerrar":
-        setModalCerrarOpen(true);
-        break;
-      case "Clonar":
-        setModalClonarOpen(true);
-        setErrorMessage("");
-        break;
-      default:
-        console.log(action, cofradia.id);
+    if (action === "Cerrar") setModalCerrarOpen(true);
+    if (action === "Clonar") {
+      setModalClonarOpen(true);
+      setErrorMessage("");
     }
   };
 
   const handleCloseCofradia = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       await updateCofradia(cofradia.id, { estado: "CERRADA" });
-      onUpdated(); // ✅ refresco real
+      onUpdated();
       setModalCerrarOpen(false);
     } catch (err) {
       console.error("Error cerrando cofradía:", err);
@@ -68,31 +63,19 @@ export const CofradiaActivaCard = ({ cofradia, isDMG, updateCofradia, onUpdated 
     }
   };
 
-  const handleConfirmClone = async ({ nombre, anio }: { nombre: string; anio: number }) => {
+  const handleConfirmClone = async ({ anio }: { nombre: string; anio: number }) => {
     setLoading(true);
     setErrorMessage("");
-
     try {
-      await updateCofradia(cofradia.id, { estado: "CERRADA" });
-
-      await axiosClient.post(CofradiaEndpoints.create, {
-        nombre,
-        anio,
-        tipo: cofradia.tipo,
-        estado: "ABIERTA",
-      });
-
-      onUpdated(); // ✅ refresco real
+      // ✅ Usamos la función del hook, nada de POST directo
+      await clonarCofradia(cofradia.id, anio);
+      onUpdated();
       setModalClonarOpen(false);
-    } catch (error: unknown) {
-      if (isAxiosError(error) && error.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
-      } else if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Error desconocido al clonar la cofradía.");
-      }
-      console.error("Error clonando la cofradía:", error);
+    } catch (err: unknown) {
+      console.error("Error clonando la cofradía:", err);
+      setErrorMessage(
+        err instanceof Error ? err.message : "Error desconocido al clonar la cofradía",
+      );
     } finally {
       setLoading(false);
     }
@@ -107,7 +90,6 @@ export const CofradiaActivaCard = ({ cofradia, isDMG, updateCofradia, onUpdated 
           label="Ver Cortejos"
           onClick={() => console.log("Ver cortejos", cofradia.id)}
         />
-
         {isDMG && (
           <div className="relative" ref={menuRef}>
             <button
@@ -178,10 +160,7 @@ export const CofradiaActivaCard = ({ cofradia, isDMG, updateCofradia, onUpdated 
           cofradia={cofradia}
           errorMessage={errorMessage}
           loading={loading}
-          onClose={() => {
-            setModalClonarOpen(false);
-            setErrorMessage("");
-          }}
+          onClose={() => setModalClonarOpen(false)}
           onConfirmClone={handleConfirmClone}
         />
       )}

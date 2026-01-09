@@ -3,17 +3,19 @@ import { useState, useRef, useEffect } from "react";
 import { getUserFromStorage } from "../../utils/authToken";
 import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
-import { isAxiosError } from "axios";
-import axiosClient from "../../api/axiosClient";
-import { CofradiaEndpoints } from "../../api/api";
 import { ClonarCofradiaModal } from "../organisms/ClonarCofradiaModal";
 
 interface Props {
   cofradias: Cofradia[];
   onUpdated: () => void;
+  clonarCofradia: (id: number, anio: number) => Promise<Cofradia>; // 🔹 recibe la función por props
 }
 
-export const CofradiasHistoricoTable = ({ cofradias, onUpdated }: Props) => {
+export const CofradiasHistoricoTable: React.FC<Props> = ({
+  cofradias,
+  onUpdated,
+  clonarCofradia,
+}) => {
   const user = getUserFromStorage();
   const isDMG = user?.role === "DMG";
 
@@ -26,27 +28,21 @@ export const CofradiasHistoricoTable = ({ cofradias, onUpdated }: Props) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Cerrar menú al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node | null;
       if (!target) return;
-      if (!Object.values(buttonRefs.current).some((b) => b?.contains(target))) {
-        setOpenMenuId(null);
-      }
+      if (!Object.values(buttonRefs.current).some((b) => b?.contains(target))) setOpenMenuId(null);
     };
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
 
-  if (cofradias.length === 0) {
-    return <p className="text-gray-500">No hay cofradías cerradas.</p>;
-  }
+  if (cofradias.length === 0) return <p className="text-gray-500">No hay cofradías cerradas.</p>;
 
   const handleMenuOpen = (id: number) => {
     const btn = buttonRefs.current[id];
     if (!btn) return;
-
     const rect = btn.getBoundingClientRect();
     setMenuCoords({ top: rect.bottom + window.scrollY, left: rect.right - 128 });
     setOpenMenuId(openMenuId === id ? null : id);
@@ -59,31 +55,22 @@ export const CofradiasHistoricoTable = ({ cofradias, onUpdated }: Props) => {
     setOpenMenuId(null);
   };
 
-  const handleConfirmClone = async ({ nombre, anio }: { nombre: string; anio: number }) => {
+  const handleConfirmClone = async ({ anio }: { nombre: string; anio: number }) => {
     if (!selectedCofradia) return;
     setLoading(true);
     setErrorMessage("");
-
     try {
-      await axiosClient.post(CofradiaEndpoints.create, {
-        nombre,
-        anio,
-        tipo: selectedCofradia.tipo,
-        estado: "ABIERTA",
-      });
+      // 🔹 Clonar usando la función pasada por props
+      await clonarCofradia(selectedCofradia.id, anio);
 
       setModalOpen(false);
       setSelectedCofradia(null);
-      onUpdated(); // ✅ refresco REAL
+      onUpdated();
     } catch (err: unknown) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        setErrorMessage(err.response.data.message);
-      } else if (err instanceof Error) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage("Error desconocido al clonar la cofradía.");
-      }
-      console.error("Error clonando la cofradía:", err);
+      console.error("Error al clonar la cofradía:", err);
+      setErrorMessage(
+        err instanceof Error ? err.message : "Error desconocido al clonar la cofradía.",
+      );
     } finally {
       setLoading(false);
     }
@@ -99,7 +86,6 @@ export const CofradiasHistoricoTable = ({ cofradias, onUpdated }: Props) => {
             <th className="p-2">Acciones</th>
           </tr>
         </thead>
-
         <tbody>
           {cofradias.map((c) => (
             <tr key={c.id} className="border-b">
@@ -110,13 +96,12 @@ export const CofradiasHistoricoTable = ({ cofradias, onUpdated }: Props) => {
                   <button
                     className="p-1 rounded hover:bg-gray-100"
                     ref={(el) => {
-                      buttonRefs.current[c.id] = el;
+                      buttonRefs.current[c.id] = el ?? null;
                     }}
                     onClick={() => handleMenuOpen(c.id)}
                   >
                     <MoreHorizontal className="w-5 h-5" />
                   </button>
-
                   {openMenuId === c.id &&
                     createPortal(
                       <div
@@ -129,7 +114,6 @@ export const CofradiasHistoricoTable = ({ cofradias, onUpdated }: Props) => {
                         >
                           Ver detalle
                         </button>
-
                         {isDMG && (
                           <button
                             className="w-full text-left px-4 py-2 hover:bg-gray-100"

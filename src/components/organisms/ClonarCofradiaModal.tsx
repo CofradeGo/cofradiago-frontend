@@ -1,7 +1,5 @@
-// ClonarCofradiaModal.tsx
 import React, { useState, useEffect } from "react";
 import type { Cofradia } from "../../types/Cofradia";
-import { AxiosError } from "axios";
 
 interface Props {
   isOpen: boolean;
@@ -23,12 +21,10 @@ export const ClonarCofradiaModal: React.FC<Props> = ({
   const [nuevoAnio, setNuevoAnio] = useState<number>(cofradia.anio + 1);
   const [localError, setLocalError] = useState<string>("");
 
-  // Reinicia estado al abrir
   useEffect(() => {
     if (isOpen) {
       const id = setTimeout(() => {
         setLocalError("");
-        // Si viene del histórico dejamos vacío para UX
         setNuevoAnio(cofradia.estado === "CERRADA" ? NaN : cofradia.anio + 1);
       }, 0);
       return () => clearTimeout(id);
@@ -46,14 +42,9 @@ export const ClonarCofradiaModal: React.FC<Props> = ({
       setLocalError("El año debe ser diferente al de la cofradía original.");
       return;
     }
-    onConfirmClone({ nombre: cofradia.nombre, anio: nuevoAnio }).catch((err: unknown) => {
-      if (err instanceof AxiosError && err.response?.data?.message) {
-        setLocalError(err.response.data.message);
-      } else if (err instanceof Error) {
-        setLocalError(err.message);
-      } else {
-        setLocalError("Error desconocido al clonar la cofradía.");
-      }
+    onConfirmClone({ nombre: cofradia.nombre, anio: nuevoAnio }).catch((err) => {
+      if (err instanceof Error) setLocalError(err.message);
+      else setLocalError("Error desconocido al clonar la cofradía.");
     });
   };
 

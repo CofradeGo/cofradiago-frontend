@@ -8,27 +8,28 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { ActionButton } from "../../components/atoms/ActionButton";
 
 export const CofradiaPage: React.FC = () => {
-  const { cofradiasActivas, historico, loading, error, refetch, updateCofradia } = useCofradias();
+  // ✅ Incluimos clonarCofradia desde el hook
+  const { cofradiasActivas, historico, loading, error, refetch, updateCofradia, clonarCofradia } =
+    useCofradias();
   const [user, setUser] = useState(getUserFromStorage());
   const isDMG = user?.role === "DMG";
 
-  // Paginación activas
   const pageSizeActiva = 2;
   const [currentPageActiva, setCurrentPageActiva] = useState(1);
   const totalPagesActiva = Math.ceil(cofradiasActivas.length / pageSizeActiva);
-  const indexLastActiva = currentPageActiva * pageSizeActiva;
-  const indexFirstActiva = indexLastActiva - pageSizeActiva;
-  const currentCofradiasActiva = cofradiasActivas.slice(indexFirstActiva, indexLastActiva);
+  const currentCofradiasActiva = cofradiasActivas.slice(
+    (currentPageActiva - 1) * pageSizeActiva,
+    currentPageActiva * pageSizeActiva,
+  );
 
-  // Paginación histórico
   const pageSizeHistorico = 10;
   const [currentPageHistorico, setCurrentPageHistorico] = useState(1);
   const totalPagesHistorico = Math.ceil(historico.length / pageSizeHistorico);
-  const indexLastHistorico = currentPageHistorico * pageSizeHistorico;
-  const indexFirstHistorico = indexLastHistorico - pageSizeHistorico;
-  const currentCofradiasHistorico = historico.slice(indexFirstHistorico, indexLastHistorico);
+  const currentCofradiasHistorico = historico.slice(
+    (currentPageHistorico - 1) * pageSizeHistorico,
+    currentPageHistorico * pageSizeHistorico,
+  );
 
-  // Escucha cambios en localStorage (logout/login)
   useEffect(() => {
     const handleStorageChange = () => setUser(getUserFromStorage());
     window.addEventListener("storage", handleStorageChange);
@@ -44,7 +45,6 @@ export const CofradiaPage: React.FC = () => {
     setPage: (page: number) => void,
   ) => {
     if (totalPages <= 1) return null;
-
     return (
       <div className="flex justify-center items-center gap-1 mt-3">
         <button
@@ -54,7 +54,6 @@ export const CofradiaPage: React.FC = () => {
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-
         <div className="flex gap-1">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
@@ -67,7 +66,6 @@ export const CofradiaPage: React.FC = () => {
             />
           ))}
         </div>
-
         <button
           onClick={() => currentPage < totalPages && setPage(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -81,13 +79,11 @@ export const CofradiaPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header con botón crear cofradía */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Cofradía</h1>
           <p className="text-gray-600">Gestión de la cofradía y sus actividades.</p>
         </div>
-
         {isDMG && (
           <ActionButton
             label="Crear nueva cofradía"
@@ -112,6 +108,8 @@ export const CofradiaPage: React.FC = () => {
                     cofradia={c}
                     isDMG={!!isDMG}
                     updateCofradia={updateCofradia}
+                    // ✅ Pasamos la función de clonación del hook
+                    clonarCofradia={clonarCofradia}
                     onUpdated={refetch}
                   />
                 ))}
@@ -125,7 +123,12 @@ export const CofradiaPage: React.FC = () => {
             {currentCofradiasHistorico.length === 0 ? (
               <p className="text-gray-500">No hay cofradías cerradas</p>
             ) : (
-              <CofradiasHistoricoTable cofradias={currentCofradiasHistorico} onUpdated={refetch} />
+              <CofradiasHistoricoTable
+                cofradias={currentCofradiasHistorico}
+                // ✅ Pasamos la función de clonación del hook
+                onUpdated={refetch}
+                clonarCofradia={clonarCofradia}
+              />
             )}
             {historico.length > pageSizeHistorico &&
               renderPagination(currentPageHistorico, totalPagesHistorico, setCurrentPageHistorico)}
