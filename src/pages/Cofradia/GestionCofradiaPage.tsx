@@ -1,7 +1,8 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCofradias } from "../../hooks/useCofradias";
 import { CofradiaHeader } from "../../components/molecules/CofradiaHeader";
+import { ClonarCofradiaModal } from "../../components/organisms/ClonarCofradiaModal";
 import { useCortejos } from "../../hooks/useCortejo";
 import { CortejosCarousel } from "../../components/organisms/CortejosCarousel";
 import { usePuestos } from "../../hooks/usePuesto";
@@ -10,19 +11,36 @@ import { useInsigniasWithElements } from "../../hooks/useInsigniasConElementos";
 import { useTramos } from "../../hooks/useTramos";
 import { ListCard } from "../../components/organisms/ListCard";
 import type { Cofradia } from "../../types/Cofradia";
+import { ROUTES } from "../../routes/routes";
+import { getDomain } from "../../utils/domain"; // ⬅️ helper
 
 export const GestionCofradiaPage: React.FC = () => {
-  const { cofradiaId } = useParams<{ cofradiaId: string }>();
-  const { cofradiasActivas, loading, error } = useCofradias();
+  const { cofradiaId, domain: domainParam } = useParams<{
+    cofradiaId: string;
+    domain: string;
+  }>();
 
-  const cofradia: Cofradia | null = React.useMemo(() => {
+  const navigate = useNavigate();
+
+  // ✅ dominio robusto (param o fallback)
+  const domain = domainParam || getDomain();
+
+  const { cofradiasActivas, loading, error, clonarCofradia, refetch } = useCofradias();
+
+  // ===================== Cofradía actual =====================
+  const cofradia: Cofradia | null = useMemo(() => {
     if (!cofradiaId) return null;
     const id = Number(cofradiaId);
     if (isNaN(id)) return null;
     return cofradiasActivas.find((c) => c.id === id) || null;
   }, [cofradiaId, cofradiasActivas]);
 
-  // Hooks principales
+  // ===================== Modal clonar =====================
+  const [cloneModalOpen, setCloneModalOpen] = useState(false);
+  const [cloneLoading, setCloneLoading] = useState(false);
+  const [cloneError, setCloneError] = useState("");
+
+  // ===================== Hooks dependientes =====================
   const {
     cortejos,
     loading: loadingCortejos,
@@ -30,51 +48,62 @@ export const GestionCofradiaPage: React.FC = () => {
   } = useCortejos(cofradia?.id || 0);
 
   const { puestosUI, loading: loadingPuestos, error: errorPuestos } = usePuestos(cofradia?.id || 0);
+
   const { cargosUI, loading: loadingCargos, error: errorCargos } = useCargos(cofradia?.id || 0);
 
-  // ===================== INSIGNIAS =====================
   const { insigniasUI } = useInsigniasWithElements(cofradia?.id || 0);
 
-  // ===================== TRAMOS =====================
-  // Elegimos el primer cortejo para cargar sus tramos (puedes cambiarlo según necesidad)
   const cortejoId = cortejos[0]?.id || 0;
   const { tramosUI } = useTramos(cofradia?.id || 0, cortejoId);
 
+  // ===================== Guards =====================
   if (loading) return <p>Cargando cofradía...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
   if (!cofradia) return <p className="text-gray-600">Cofradía no encontrada</p>;
 
-  // ===================== Handlers =====================
-  const handleEditCofradia = () => console.log("Editar cofradía", cofradia.id);
-  const handleDeleteCofradia = () => console.log("Eliminar cofradía", cofradia.id);
-  const handleCloneCofradia = () => console.log("Clonar cofradía", cofradia.id);
+  // ===================== Handlers Cofradía =====================
+  const handleEditCofradia = () => {
+    console.log("Editar cofradía", cofradia.id);
+  };
 
-  const handleViewCortejo = (id: number) => console.log("Ver cortejo", id);
-  const handleEditCortejo = (id: number) => console.log("Editar cortejo", id);
-  const handleDeleteCortejo = (id: number) => console.log("Eliminar cortejo", id);
-  const handleAddCortejo = () => console.log("Añadir cortejo");
+  const handleDeleteCofradia = () => {
+    console.log("Eliminar cofradía", cofradia.id);
+  };
 
-  const handleAddPuesto = () => console.log("Añadir puesto");
-  const handleEditPuesto = (id: number) => console.log("Editar puesto", id);
+  const handleOpenClone = () => {
+    setCloneError("");
+    setCloneModalOpen(true);
+  };
 
-  const handleAddCargo = () => console.log("Añadir cargo");
-  const handleEditCargo = (id: number) => console.log("Editar cargo", id);
+  const handleConfirmClone = async ({ anio }: { anio: number }) => {
+    if (!cofradia || !domain) return;
 
-  const handleAddInsignia = () => console.log("Añadir insignia");
-  const handleEditInsignia = (id: number) => console.log("Editar insignia", id);
+    setCloneLoading(true);
+    setCloneError("");
 
-  const handleAddTramo = () => console.log("Añadir tramo");
-  const handleEditTramo = (id: number) => console.log("Editar tramo", id);
+    try {
+      await clonarCofradia(cofradia.id, anio);
+      await refetch();
+
+      setCloneModalOpen(false);
+
+      // redirección correcta y estable
+      navigate(ROUTES.cofradia(domain));
+    } catch (err) {
+      setCloneError(err instanceof Error ? err.message : "Error al clonar la cofradía");
+    } finally {
+      setCloneLoading(false);
+    }
+  };
 
   // ===================== Render =====================
   return (
     <div className="space-y-6">
-      {/* Cabecera */}
       <CofradiaHeader
         cofradia={cofradia}
         onEdit={handleEditCofradia}
         onDelete={handleDeleteCofradia}
-        onClone={handleCloneCofradia}
+        onClone={handleOpenClone}
       />
 
       {/* Cortejos */}
@@ -87,15 +116,15 @@ export const GestionCofradiaPage: React.FC = () => {
         ) : (
           <CortejosCarousel
             cortejos={cortejos}
-            onView={handleViewCortejo}
-            onEdit={handleEditCortejo}
-            onDelete={handleDeleteCortejo}
-            onAdd={handleAddCortejo}
+            onView={(id) => console.log("Ver cortejo", id)}
+            onEdit={(id) => console.log("Editar cortejo", id)}
+            onDelete={(id) => console.log("Eliminar cortejo", id)}
+            onAdd={() => console.log("Añadir cortejo")}
           />
         )}
       </section>
 
-      {/* Puestos y Cargos */}
+      {/* Puestos / Cargos */}
       <section className="p-4 bg-white rounded shadow">
         <h2 className="text-xl font-bold mb-4">Puestos / Cargos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -107,8 +136,8 @@ export const GestionCofradiaPage: React.FC = () => {
             <ListCard
               type="puestos"
               items={puestosUI}
-              onEdit={handleEditPuesto}
-              onAdd={handleAddPuesto}
+              onEdit={(id) => console.log("Editar puesto", id)}
+              onAdd={() => console.log("Añadir puesto")}
             />
           )}
 
@@ -120,40 +149,44 @@ export const GestionCofradiaPage: React.FC = () => {
             <ListCard
               type="cargos"
               items={cargosUI}
-              onEdit={handleEditCargo}
-              onAdd={handleAddCargo}
+              onEdit={(id) => console.log("Editar cargo", id)}
+              onAdd={() => console.log("Añadir cargo")}
             />
           )}
         </div>
       </section>
 
-      {/* Insignias y Tramos */}
+      {/* Insignias / Tramos */}
       <section className="p-4 bg-white rounded shadow">
         <h2 className="text-xl font-bold mb-4">Insignias y Tramos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Insignias */}
           <ListCard
             type="insignias"
             items={insigniasUI}
-            onEdit={handleEditInsignia}
-            onAdd={handleAddInsignia}
+            onEdit={(id) => console.log("Editar insignia", id)}
+            onAdd={() => console.log("Añadir insignia")}
           />
 
-          {/* Tramos */}
           <ListCard
-            type="insignias" // reutilizamos estilo, puedes crear type="tramos" si quieres
+            type="insignias"
             items={tramosUI}
-            onEdit={handleEditTramo}
-            onAdd={handleAddTramo}
+            onEdit={(id) => console.log("Editar tramo", id)}
+            onAdd={() => console.log("Añadir tramo")}
           />
         </div>
       </section>
 
-      {/* Hermanos */}
-      <section className="p-4 bg-white rounded shadow">
-        <h2 className="text-xl font-bold mb-2">Hermanos</h2>
-        <p className="text-gray-500">Listado paginado de hermanos con filtros...</p>
-      </section>
+      {/* Modal clonar */}
+      {cloneModalOpen && (
+        <ClonarCofradiaModal
+          isOpen={cloneModalOpen}
+          cofradia={cofradia}
+          loading={cloneLoading}
+          errorMessage={cloneError}
+          onClose={() => setCloneModalOpen(false)}
+          onConfirmClone={handleConfirmClone}
+        />
+      )}
     </div>
   );
 };

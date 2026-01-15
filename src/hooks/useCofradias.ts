@@ -12,13 +12,16 @@ export const useCofradias = () => {
   const [cloning, setCloning] = useState(false);
   const [cloneError, setCloneError] = useState<string | null>(null);
 
+  // ===================== Fetch =====================
   const fetchCofradias = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const [activaRes, historicoRes] = await Promise.all([
-        axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, { params: { estado: "ABIERTA" } }),
+        axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, {
+          params: { estado: "ABIERTA" },
+        }),
         axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, {
           params: { estado: "CERRADA", order: "desc" },
         }),
@@ -34,18 +37,15 @@ export const useCofradias = () => {
     }
   };
 
-  // Función para actualizar cualquier cofradía (editar o cerrar)
+  // ===================== Update =====================
   const updateCofradia = async (cofradiaId: number, data: Partial<Cofradia>) => {
     try {
       const res = await axiosClient.put(CofradiaEndpoints.update(cofradiaId), data);
 
-      // Actualizar estado local según el estado de la cofradía
       if (data.estado === "CERRADA") {
-        // Pasar de activas a histórico
         setCofradiasActivas((prev) => prev.filter((c) => c.id !== cofradiaId));
         setHistorico((prev) => [res.data.cofradia, ...prev]);
       } else {
-        // Editar datos de cofradía en el array correspondiente
         setCofradiasActivas((prev) =>
           prev.map((c) => (c.id === cofradiaId ? res.data.cofradia : c)),
         );
@@ -59,27 +59,26 @@ export const useCofradias = () => {
     }
   };
 
-  // Nueva función para clonar cofradía usando el endpoint de clonación
+  // ===================== Clone =====================
   const clonarCofradia = async (cofradiaId: number, anioNuevo: number) => {
     try {
       setCloning(true);
       setCloneError(null);
 
-      // ✅ POST al endpoint de clonación
       const res = await axiosClient.post<{ cofradia: Cofradia }>(
         CofradiaEndpoints.clone(cofradiaId),
         { anioNuevo },
       );
 
-      // ✅ Añadir la nueva cofradía al listado de activas
-      setCofradiasActivas((prev) => [res.data.cofradia, ...prev]);
+      // 🔑 CLAVE: refresco global (sirve para listado, histórico y gestionar)
+      await fetchCofradias();
 
       return res.data.cofradia;
     } catch (err: unknown) {
       console.error("Error clonando cofradía", err);
 
       if (isAxiosError(err)) {
-        setCloneError(err.response?.data?.message || "Error desconocido al clonar la cofradía");
+        setCloneError(err.response?.data?.message || "Error al clonar la cofradía");
       } else {
         setCloneError("Error desconocido al clonar la cofradía");
       }
