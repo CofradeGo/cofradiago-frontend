@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCofradias } from "../../hooks/useCofradias";
 import { CofradiaHeader } from "../../components/molecules/CofradiaHeader";
 import { ClonarCofradiaModal } from "../../components/organisms/ClonarCofradiaModal";
+import { EditarCofradiaModal } from "../../components/organisms/EditarCofradiaModal"; // ✅ nuevo
 import { useCortejos } from "../../hooks/useCortejo";
 import { CortejosCarousel } from "../../components/organisms/CortejosCarousel";
 import { usePuestos } from "../../hooks/usePuesto";
@@ -12,18 +13,14 @@ import { useTramos } from "../../hooks/useTramos";
 import { ListCard } from "../../components/organisms/ListCard";
 import type { Cofradia } from "../../types/Cofradia";
 import { ROUTES } from "../../routes/routes";
-import { getDomain } from "../../utils/domain"; // ⬅️ helper
+import { getDomain } from "../../utils/domain"; // helper
 
 export const GestionCofradiaPage: React.FC = () => {
-  const { cofradiaId, domain: domainParam } = useParams<{
-    cofradiaId: string;
-    domain: string;
-  }>();
-
+  const { cofradiaId, domain: domainParam } = useParams<{ cofradiaId: string; domain: string }>();
   const navigate = useNavigate();
 
   // ✅ dominio robusto (param o fallback)
-  const domain = domainParam || getDomain();
+  const domain = domainParam || getDomain() || "";
 
   const { cofradiasActivas, loading, error, clonarCofradia, refetch } = useCofradias();
 
@@ -35,10 +32,12 @@ export const GestionCofradiaPage: React.FC = () => {
     return cofradiasActivas.find((c) => c.id === id) || null;
   }, [cofradiaId, cofradiasActivas]);
 
-  // ===================== Modal clonar =====================
+  // ===================== Modales =====================
   const [cloneModalOpen, setCloneModalOpen] = useState(false);
   const [cloneLoading, setCloneLoading] = useState(false);
   const [cloneError, setCloneError] = useState("");
+
+  const [editModalOpen, setEditModalOpen] = useState(false); // ✅ modal editar
 
   // ===================== Hooks dependientes =====================
   const {
@@ -46,13 +45,9 @@ export const GestionCofradiaPage: React.FC = () => {
     loading: loadingCortejos,
     error: errorCortejos,
   } = useCortejos(cofradia?.id || 0);
-
   const { puestosUI, loading: loadingPuestos, error: errorPuestos } = usePuestos(cofradia?.id || 0);
-
   const { cargosUI, loading: loadingCargos, error: errorCargos } = useCargos(cofradia?.id || 0);
-
   const { insigniasUI } = useInsigniasWithElements(cofradia?.id || 0);
-
   const cortejoId = cortejos[0]?.id || 0;
   const { tramosUI } = useTramos(cofradia?.id || 0, cortejoId);
 
@@ -62,9 +57,7 @@ export const GestionCofradiaPage: React.FC = () => {
   if (!cofradia) return <p className="text-gray-600">Cofradía no encontrada</p>;
 
   // ===================== Handlers Cofradía =====================
-  const handleEditCofradia = () => {
-    console.log("Editar cofradía", cofradia.id);
-  };
+  const handleEditCofradia = () => setEditModalOpen(true); // abre modal editar
 
   const handleDeleteCofradia = () => {
     console.log("Eliminar cofradía", cofradia.id);
@@ -84,10 +77,8 @@ export const GestionCofradiaPage: React.FC = () => {
     try {
       await clonarCofradia(cofradia.id, anio);
       await refetch();
-
       setCloneModalOpen(false);
 
-      // redirección correcta y estable
       navigate(ROUTES.cofradia(domain));
     } catch (err) {
       setCloneError(err instanceof Error ? err.message : "Error al clonar la cofradía");
@@ -185,6 +176,19 @@ export const GestionCofradiaPage: React.FC = () => {
           errorMessage={cloneError}
           onClose={() => setCloneModalOpen(false)}
           onConfirmClone={handleConfirmClone}
+        />
+      )}
+
+      {/* Modal editar ✅ */}
+      {editModalOpen && (
+        <EditarCofradiaModal
+          isOpen={editModalOpen}
+          cofradia={cofradia}
+          onClose={() => setEditModalOpen(false)}
+          onSuccess={async () => {
+            await refetch(); // refresca la data
+            setEditModalOpen(false);
+          }}
         />
       )}
     </div>
