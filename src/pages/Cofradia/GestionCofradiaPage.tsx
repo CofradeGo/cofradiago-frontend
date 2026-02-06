@@ -159,7 +159,7 @@ export const GestionCofradiaPage: React.FC = () => {
           />
 
           <ListCard
-            type="insignias"
+            type="tramos"
             items={tramosUI}
             onEdit={(id) => console.log("Editar tramo", id)}
             onAdd={() => console.log("Añadir tramo")}

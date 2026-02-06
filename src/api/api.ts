@@ -36,6 +36,7 @@ export const CofradiaEndpoints = {
   list: `/cofradia`, // GET → listado de cofradías de la hermandad activa
   create: `/cofradia`, // POST → crear cofradía (DMG)
   update: (id: number) => `/cofradia/${id}`, // PUT → actualizar cofradía (DMG)
+  createFull: `/cofradia/full`, // POST → crear cofradía con todos sus elementos (DMG)
   delete: (id: number) => `/cofradia/${id}`, // DELETE → borrar cofradía (DMG)
   clone: (id: number) => `/cofradia/${id}/clonar`, // POST → clonar cofradía (DMG)
 };

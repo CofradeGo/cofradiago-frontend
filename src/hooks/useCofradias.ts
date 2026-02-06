@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
 import { CofradiaEndpoints } from "../api/api";
-import type { Cofradia } from "../types/Cofradia";
+import type { Cofradia, CrearCofradiaFullInput } from "../types/Cofradia";
 import { isAxiosError } from "axios";
 
 export const useCofradias = () => {
@@ -9,8 +9,12 @@ export const useCofradias = () => {
   const [historico, setHistorico] = useState<Cofradia[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [cloning, setCloning] = useState(false);
   const [cloneError, setCloneError] = useState<string | null>(null);
+
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // ===================== Fetch =====================
   const fetchCofradias = async () => {
@@ -19,9 +23,7 @@ export const useCofradias = () => {
       setError(null);
 
       const [activaRes, historicoRes] = await Promise.all([
-        axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, {
-          params: { estado: "ABIERTA" },
-        }),
+        axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, { params: { estado: "ABIERTA" } }),
         axiosClient.get<Cofradia[]>(CofradiaEndpoints.list, {
           params: { estado: "CERRADA", order: "desc" },
         }),
@@ -70,7 +72,6 @@ export const useCofradias = () => {
         { anioNuevo },
       );
 
-      // 🔑 CLAVE: refresco global (sirve para listado, histórico y gestionar)
       await fetchCofradias();
 
       return res.data.cofradia;
@@ -89,6 +90,35 @@ export const useCofradias = () => {
     }
   };
 
+  // ===================== Create Full =====================
+  const createFullCofradia = async (data: CrearCofradiaFullInput) => {
+    try {
+      setCreating(true);
+      setCreateError(null);
+
+      const res = await axiosClient.post<{ cofradia: Cofradia }>(
+        CofradiaEndpoints.createFull,
+        data,
+      );
+
+      await fetchCofradias();
+
+      return res.data.cofradia;
+    } catch (err: unknown) {
+      console.error("Error creando cofradía full", err);
+
+      if (isAxiosError(err)) {
+        setCreateError(err.response?.data?.message || "Error al crear la cofradía");
+      } else {
+        setCreateError("Error desconocido al crear la cofradía");
+      }
+
+      throw err;
+    } finally {
+      setCreating(false);
+    }
+  };
+
   useEffect(() => {
     fetchCofradias();
   }, []);
@@ -100,7 +130,10 @@ export const useCofradias = () => {
     error,
     cloning,
     cloneError,
+    creating,
+    createError,
     clonarCofradia,
+    createFullCofradia,
     refetch: fetchCofradias,
     updateCofradia,
   };

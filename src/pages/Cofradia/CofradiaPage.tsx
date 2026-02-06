@@ -6,13 +6,32 @@ import { CofradiaPageLayout } from "../../components/layouts/CofradiaPageLayout"
 import { getUserFromStorage } from "../../utils/authToken";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { ActionButton } from "../../components/atoms/ActionButton";
+import { CreateCofradiaWizardModal } from "../../components/organisms/CreateCofradiaWizard";
+import type { CrearCofradiaFullInput } from "../../types/Cofradia";
 
 export const CofradiaPage: React.FC = () => {
-  // ✅ Incluimos clonarCofradia desde el hook
-  const { cofradiasActivas, historico, loading, error, refetch, updateCofradia, clonarCofradia } =
-    useCofradias();
+  const {
+    cofradiasActivas,
+    historico,
+    loading,
+    error,
+    refetch,
+    updateCofradia,
+    clonarCofradia,
+    createFullCofradia,
+    creating,
+    createError,
+  } = useCofradias();
+
   const [user, setUser] = useState(getUserFromStorage());
   const isDMG = user?.role === "DMG";
+
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+
+  const handleCreateCofradia = async (data: CrearCofradiaFullInput) => {
+    await createFullCofradia(data);
+    setOpenCreateModal(false);
+  };
 
   const pageSizeActiva = 2;
   const [currentPageActiva, setCurrentPageActiva] = useState(1);
@@ -84,16 +103,25 @@ export const CofradiaPage: React.FC = () => {
           <h1 className="text-3xl font-bold">Cofradía</h1>
           <p className="text-gray-600">Gestión de la cofradía y sus actividades.</p>
         </div>
+
         {isDMG && (
           <ActionButton
             label="Crear nueva cofradía"
-            onClick={() => console.log("Crear nueva cofradía")}
+            onClick={() => setOpenCreateModal(true)}
             className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 shadow-md rounded-md"
           >
             <Plus className="w-4 h-4" />
           </ActionButton>
         )}
       </div>
+
+      <CreateCofradiaWizardModal
+        open={openCreateModal}
+        onClose={() => setOpenCreateModal(false)}
+        onSubmit={handleCreateCofradia}
+        loading={creating}
+        error={createError}
+      />
 
       <CofradiaPageLayout
         activa={
@@ -108,7 +136,6 @@ export const CofradiaPage: React.FC = () => {
                     cofradia={c}
                     isDMG={!!isDMG}
                     updateCofradia={updateCofradia}
-                    // ✅ Pasamos la función de clonación del hook
                     clonarCofradia={clonarCofradia}
                     onUpdated={refetch}
                   />
@@ -125,7 +152,6 @@ export const CofradiaPage: React.FC = () => {
             ) : (
               <CofradiasHistoricoTable
                 cofradias={currentCofradiasHistorico}
-                // ✅ Pasamos la función de clonación del hook
                 onUpdated={refetch}
                 clonarCofradia={clonarCofradia}
               />
