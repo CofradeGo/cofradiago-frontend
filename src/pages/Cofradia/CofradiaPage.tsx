@@ -6,36 +6,51 @@ import { CofradiaPageLayout } from "../../components/layouts/CofradiaPageLayout"
 import { getUserFromStorage } from "../../utils/authToken";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { ActionButton } from "../../components/atoms/ActionButton";
+import { CreateCofradiaWizardModal } from "../../components/organisms/CreateCofradiaWizard";
+import type { CrearCofradiaFullInput } from "../../types/Cofradia";
 
 export const CofradiaPage: React.FC = () => {
-  const { cofradiasActivas, historico, loading, error } = useCofradias();
+  const {
+    cofradiasActivas,
+    historico,
+    loading,
+    error,
+    refetch,
+    updateCofradia,
+    clonarCofradia,
+    createFullCofradia,
+    creating,
+    createError,
+  } = useCofradias();
 
   const [user, setUser] = useState(getUserFromStorage());
   const isDMG = user?.role === "DMG";
 
-  // Paginación activas
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+
+  const handleCreateCofradia = async (data: CrearCofradiaFullInput) => {
+    await createFullCofradia(data);
+    setOpenCreateModal(false);
+  };
+
   const pageSizeActiva = 2;
   const [currentPageActiva, setCurrentPageActiva] = useState(1);
   const totalPagesActiva = Math.ceil(cofradiasActivas.length / pageSizeActiva);
-  const indexLastActiva = currentPageActiva * pageSizeActiva;
-  const indexFirstActiva = indexLastActiva - pageSizeActiva;
-  const currentCofradiasActiva = cofradiasActivas.slice(indexFirstActiva, indexLastActiva);
+  const currentCofradiasActiva = cofradiasActivas.slice(
+    (currentPageActiva - 1) * pageSizeActiva,
+    currentPageActiva * pageSizeActiva,
+  );
 
-  // Paginación histórico
   const pageSizeHistorico = 10;
   const [currentPageHistorico, setCurrentPageHistorico] = useState(1);
   const totalPagesHistorico = Math.ceil(historico.length / pageSizeHistorico);
-  const indexLastHistorico = currentPageHistorico * pageSizeHistorico;
-  const indexFirstHistorico = indexLastHistorico - pageSizeHistorico;
-  const currentCofradiasHistorico = historico.slice(indexFirstHistorico, indexLastHistorico);
+  const currentCofradiasHistorico = historico.slice(
+    (currentPageHistorico - 1) * pageSizeHistorico,
+    currentPageHistorico * pageSizeHistorico,
+  );
 
-  // Escucha cambios en localStorage (logout/login)
   useEffect(() => {
-    const handleStorageChange = () => {
-      const updatedUser = getUserFromStorage();
-      console.log("Usuario actualizado:", updatedUser);
-      setUser(updatedUser);
-    };
+    const handleStorageChange = () => setUser(getUserFromStorage());
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
@@ -49,7 +64,6 @@ export const CofradiaPage: React.FC = () => {
     setPage: (page: number) => void,
   ) => {
     if (totalPages <= 1) return null;
-
     return (
       <div className="flex justify-center items-center gap-1 mt-3">
         <button
@@ -59,7 +73,6 @@ export const CofradiaPage: React.FC = () => {
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-
         <div className="flex gap-1">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
@@ -72,7 +85,6 @@ export const CofradiaPage: React.FC = () => {
             />
           ))}
         </div>
-
         <button
           onClick={() => currentPage < totalPages && setPage(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -95,13 +107,21 @@ export const CofradiaPage: React.FC = () => {
         {isDMG && (
           <ActionButton
             label="Crear nueva cofradía"
-            onClick={() => console.log("Crear nueva cofradía")}
+            onClick={() => setOpenCreateModal(true)}
             className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 shadow-md rounded-md"
           >
             <Plus className="w-4 h-4" />
           </ActionButton>
         )}
       </div>
+
+      <CreateCofradiaWizardModal
+        open={openCreateModal}
+        onClose={() => setOpenCreateModal(false)}
+        onSubmit={handleCreateCofradia}
+        loading={creating}
+        error={createError}
+      />
 
       <CofradiaPageLayout
         activa={
@@ -111,11 +131,17 @@ export const CofradiaPage: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {currentCofradiasActiva.map((c) => (
-                  <CofradiaActivaCard key={c.id} cofradia={c} isDMG={!!isDMG} />
+                  <CofradiaActivaCard
+                    key={c.id}
+                    cofradia={c}
+                    isDMG={!!isDMG}
+                    updateCofradia={updateCofradia}
+                    clonarCofradia={clonarCofradia}
+                    onUpdated={refetch}
+                  />
                 ))}
               </div>
             )}
-
             {renderPagination(currentPageActiva, totalPagesActiva, setCurrentPageActiva)}
           </>
         }
@@ -124,9 +150,12 @@ export const CofradiaPage: React.FC = () => {
             {currentCofradiasHistorico.length === 0 ? (
               <p className="text-gray-500">No hay cofradías cerradas</p>
             ) : (
-              <CofradiasHistoricoTable cofradias={currentCofradiasHistorico} />
+              <CofradiasHistoricoTable
+                cofradias={currentCofradiasHistorico}
+                onUpdated={refetch}
+                clonarCofradia={clonarCofradia}
+              />
             )}
-
             {historico.length > pageSizeHistorico &&
               renderPagination(currentPageHistorico, totalPagesHistorico, setCurrentPageHistorico)}
           </>

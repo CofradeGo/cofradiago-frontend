@@ -36,5 +36,64 @@ export const CofradiaEndpoints = {
   list: `/cofradia`, // GET → listado de cofradías de la hermandad activa
   create: `/cofradia`, // POST → crear cofradía (DMG)
   update: (id: number) => `/cofradia/${id}`, // PUT → actualizar cofradía (DMG)
+  createFull: `/cofradia/full`, // POST → crear cofradía con todos sus elementos (DMG)
   delete: (id: number) => `/cofradia/${id}`, // DELETE → borrar cofradía (DMG)
+  clone: (id: number) => `/cofradia/${id}/clonar`, // POST → clonar cofradía (DMG)
+};
+
+// -------------------- Cortejos --------------------
+export const CortejoEndpoints = {
+  listByCofradia: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos`, // GET → listado de cortejos de una cofradía
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos`, // POST → crear cortejo (DMG)
+  update: (cortejoId: number) => `/cortejos/${cortejoId}`, // PUT → actualizar cortejo (DMG)
+  delete: (cortejoId: number) => `/cortejos/${cortejoId}`, // DELETE → borrar cortejo (DMG)
+};
+
+// -------------------- Puestos --------------------
+export const PuestoEnpoints = {
+  list: (cofradiaId: number) => `/cofradias/${cofradiaId}/puestos`,
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/puestos`,
+  update: (cofradiaId: number, puestoId: number) => `/cofradias/${cofradiaId}/puestos/${puestoId}`,
+  delete: (cofradiaId: number, puestoId: number) => `/cofradias/${cofradiaId}/puestos/${puestoId}`,
+};
+
+// -------------------- Cargos --------------------
+export const CargoEndpoints = {
+  list: (cofradiaId: number) => `/cofradias/${cofradiaId}/cargos`,
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/cargos`,
+  update: (cofradiaId: number, cargoId: number) => `/cofradias/${cofradiaId}/cargos/${cargoId}`,
+  delete: (cofradiaId: number, cargoId: number) => `/cofradias/${cofradiaId}/cargos/${cargoId}`,
+};
+
+// -------------------- Tramos --------------------
+export const TramoEndpoints = {
+  list: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos`,
+
+  create: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos`,
+
+  update: (cofradiaId: number, cortejoId: number, tramoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}`,
+
+  delete: (cofradiaId: number, cortejoId: number, tramoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}`,
+};
+
+// -------------------- Insignias --------------------
+export const InsigniaEndpoints = {
+  list: (cofradiaId: number) => `/cofradias/${cofradiaId}/insignias`,
+  create: (cofradiaId: number) => `/cofradias/${cofradiaId}/insignias`,
+  update: (cofradiaId: number, insigniaId: number) =>
+    `/cofradias/${cofradiaId}/insignias/${insigniaId}`,
+  delete: (cofradiaId: number, insigniaId: number) =>
+    `/cofradias/${cofradiaId}/insignias/${insigniaId}`,
+};
+
+// -------------------- Elementos de Insignia --------------------
+export const ElementoInsigniaEndpoints = {
+  list: (insigniaId: number) => `/cofradias/insignias/${insigniaId}/elementos`,
+  create: (insigniaId: number) => `/cofradias/insignias/${insigniaId}/elementos`,
+  update: (elementoId: number) => `/cofradias/elementos/${elementoId}`,
+  delete: (elementoId: number) => `/cofradias/elementos/${elementoId}`,
 };
