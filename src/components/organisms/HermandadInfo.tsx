@@ -1,6 +1,7 @@
 import React from "react";
-import { FiMail, FiEdit, FiImage } from "react-icons/fi";
+import { FiMail, FiEdit } from "react-icons/fi";
 import type { Hermandad } from "../../types/Hermandad";
+import { HermandadLogo } from "../atoms/HermandadLogo";
 
 interface HermandadInfoProps {
   domain: string;
@@ -13,15 +14,7 @@ export const HermandadInfo: React.FC<HermandadInfoProps> = ({ hermandad, openEdi
     <div className="flex flex-col md:flex-row bg-white shadow-lg rounded-2xl p-8 max-w-6xl mx-auto gap-10">
       {/* Logo */}
       <div className="w-48 h-48 md:w-56 md:h-56 flex-shrink-0 rounded-full overflow-hidden shadow-md bg-gray-100 flex items-center justify-center">
-        {hermandad.logoUrl ? (
-          <img
-            src={hermandad.logoUrl}
-            alt={`${hermandad.name} logo`}
-            className="object-cover w-full h-full"
-          />
-        ) : (
-          <FiImage className="text-gray-300 w-16 h-16" />
-        )}
+        <HermandadLogo src={hermandad.logoUrl} name={hermandad.name} className="w-full h-full" />
       </div>
 
       {/* Contenido */}

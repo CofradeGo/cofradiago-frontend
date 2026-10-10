@@ -36,7 +36,7 @@ export const LoginPage: React.FC = () => {
   return (
     <LoginLayout
       cofradeLogo={CofradeGoLogo}
-      hdadLogo={hermandad?.logoUrl || "https://via.placeholder.com/112"}
+      hdadLogo={hermandad?.logoUrl ?? null}
       hdadName={hermandad?.name || "Hermandad desconocida"}
       onForgotClick={!showForgot ? () => setShowForgot(true) : undefined}
     >
