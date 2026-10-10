@@ -88,7 +88,9 @@ export const CofradiaActivaCard: React.FC<Props> = ({
       <div className="mt-4 flex items-center justify-between">
         <ActionButton
           label="Ver Cortejos"
-          onClick={() => console.log("Ver cortejos", cofradia.id)}
+          onClick={() => {
+            // TODO: implementar "Ver cortejos"
+          }}
         />
         {isDMG && (
           <div className="relative" ref={menuRef}>

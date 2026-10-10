@@ -72,8 +72,7 @@ export const UsersList: React.FC<UsersListProps> = ({ currentUserRole }) => {
           userId={userToDelete.id}
           username={userToDelete.username}
           onClose={() => setIsDeleteModalOpen(false)}
-          onSuccess={(msg) => {
-            console.log(msg);
+          onSuccess={() => {
             refetchUsers();
             setIsDeleteModalOpen(false);
           }}
