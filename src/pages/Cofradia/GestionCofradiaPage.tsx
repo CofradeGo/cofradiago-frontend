@@ -60,7 +60,7 @@ export const GestionCofradiaPage: React.FC = () => {
   const handleEditCofradia = () => setEditModalOpen(true); // abre modal editar
 
   const handleDeleteCofradia = () => {
-    console.log("Eliminar cofradía", cofradia.id);
+    // TODO: implementar borrado de cofradía (pedir confirmación antes)
   };
 
   const handleOpenClone = () => {
@@ -107,10 +107,18 @@ export const GestionCofradiaPage: React.FC = () => {
         ) : (
           <CortejosCarousel
             cortejos={cortejos}
-            onView={(id) => console.log("Ver cortejo", id)}
-            onEdit={(id) => console.log("Editar cortejo", id)}
-            onDelete={(id) => console.log("Eliminar cortejo", id)}
-            onAdd={() => console.log("Añadir cortejo")}
+            onView={() => {
+              // TODO: implementar "Ver cortejo"
+            }}
+            onEdit={() => {
+              // TODO: implementar "Editar cortejo"
+            }}
+            onDelete={() => {
+              // TODO: implementar "Eliminar cortejo"
+            }}
+            onAdd={() => {
+              // TODO: implementar "Añadir cortejo"
+            }}
           />
         )}
       </section>
@@ -127,8 +135,12 @@ export const GestionCofradiaPage: React.FC = () => {
             <ListCard
               type="puestos"
               items={puestosUI}
-              onEdit={(id) => console.log("Editar puesto", id)}
-              onAdd={() => console.log("Añadir puesto")}
+              onEdit={() => {
+                // TODO: implementar "Editar puesto"
+              }}
+              onAdd={() => {
+                // TODO: implementar "Añadir puesto"
+              }}
             />
           )}
 
@@ -140,8 +152,12 @@ export const GestionCofradiaPage: React.FC = () => {
             <ListCard
               type="cargos"
               items={cargosUI}
-              onEdit={(id) => console.log("Editar cargo", id)}
-              onAdd={() => console.log("Añadir cargo")}
+              onEdit={() => {
+                // TODO: implementar "Editar cargo"
+              }}
+              onAdd={() => {
+                // TODO: implementar "Añadir cargo"
+              }}
             />
           )}
         </div>
@@ -154,15 +170,23 @@ export const GestionCofradiaPage: React.FC = () => {
           <ListCard
             type="insignias"
             items={insigniasUI}
-            onEdit={(id) => console.log("Editar insignia", id)}
-            onAdd={() => console.log("Añadir insignia")}
+            onEdit={() => {
+              // TODO: implementar "Editar insignia"
+            }}
+            onAdd={() => {
+              // TODO: implementar "Añadir insignia"
+            }}
           />
 
           <ListCard
             type="tramos"
             items={tramosUI}
-            onEdit={(id) => console.log("Editar tramo", id)}
-            onAdd={() => console.log("Añadir tramo")}
+            onEdit={() => {
+              // TODO: implementar "Editar tramo"
+            }}
+            onAdd={() => {
+              // TODO: implementar "Añadir tramo"
+            }}
           />
         </div>
       </section>
