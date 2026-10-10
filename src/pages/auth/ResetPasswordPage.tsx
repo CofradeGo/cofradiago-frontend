@@ -61,7 +61,7 @@ export const ResetPasswordPage: React.FC = () => {
   return (
     <LoginLayout
       cofradeLogo={CofradeGoLogo}
-      hdadLogo={hermandad?.logoUrl || "https://via.placeholder.com/112"}
+      hdadLogo={hermandad?.logoUrl ?? null}
       hdadName={hermandad?.name || "Hermandad desconocida"}
     >
       <div className="w-full max-w-sm mx-auto mt-10">

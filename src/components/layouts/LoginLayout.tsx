@@ -1,8 +1,9 @@
 import React from "react";
+import { HermandadLogo } from "../atoms/HermandadLogo";
 
 interface LoginLayoutProps {
   cofradeLogo: string;
-  hdadLogo: string;
+  hdadLogo?: string | null;
   hdadName: string;
   children?: React.ReactNode;
   onForgotClick?: () => void; // opcional
@@ -22,7 +23,11 @@ export const LoginLayout: React.FC<LoginLayoutProps> = ({
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10 border border-gray-100">
           {/* Logo hermandad */}
           <div className="flex flex-col items-center mb-8">
-            <img src={hdadLogo} alt={hdadName} className="h-20 w-auto mb-3 drop-shadow-md" />
+            <HermandadLogo
+              src={hdadLogo}
+              name={hdadName}
+              className="h-28 w-28 sm:h-32 sm:w-32 mb-3"
+            />
             <h2 className="text-xl font-semibold text-gray-800 tracking-wide">{hdadName}</h2>
           </div>
 
