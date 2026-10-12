@@ -132,7 +132,10 @@ export const usePuestos = (cofradiaId: number) => {
 
   /* ================= API ================= */
   return {
-    puestosUI: puestos.map(mapPuestoToUI), // ✅ Solo UI para el page
+    // La vista mapeada la consumen los listados de tipo tarjeta; las
+    // tablas necesitan el dato completo (p. ej. para editar el código).
+    puestos,
+    puestosUI: puestos.map(mapPuestoToUI),
     loading,
     error,
     refetch: fetchPuestos,
