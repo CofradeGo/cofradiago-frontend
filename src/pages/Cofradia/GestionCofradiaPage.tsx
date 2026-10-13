@@ -1,23 +1,27 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCofradias } from "../../hooks/useCofradias";
 import { CofradiaHeader } from "../../components/molecules/CofradiaHeader";
 import { ClonarCofradiaModal } from "../../components/organisms/ClonarCofradiaModal";
 import { EditarCofradiaModal } from "../../components/organisms/EditarCofradiaModal"; // ✅ nuevo
-import { useCortejos } from "../../hooks/useCortejo";
-import { CortejosCarousel } from "../../components/organisms/CortejosCarousel";
-import { usePuestos } from "../../hooks/usePuesto";
+import { useCortejos } from "../../hooks/useCortejos";
 import { useCargos } from "../../hooks/useCargo";
-import { useInsigniasWithElements } from "../../hooks/useInsigniasConElementos";
-import { useTramos } from "../../hooks/useTramos";
 import { ListCard } from "../../components/organisms/ListCard";
+import { ToastProvider } from "../../components/organisms/toast/ToastProvider";
+import { GestionCortejos } from "../../components/organisms/GestionCortejos";
+import { GestionPuestos } from "../../components/organisms/GestionPuestos";
+import { GestionInsignias } from "../../components/organisms/GestionInsignias";
+import { GestionTramos } from "../../components/organisms/GestionTramos";
 import type { Cofradia } from "../../types/Cofradia";
 import { ROUTES } from "../../routes/routes";
 import { getDomain } from "../../utils/domain"; // helper
+import { getUserFromStorage } from "../../utils/authToken";
 
 export const GestionCofradiaPage: React.FC = () => {
   const { cofradiaId, domain: domainParam } = useParams<{ cofradiaId: string; domain: string }>();
   const navigate = useNavigate();
+  // El AUXILIAR entra en modo lectura: sin acciones de edición.
+  const esDMG = getUserFromStorage()?.role === "DMG";
 
   // ✅ dominio robusto (param o fallback)
   const domain = domainParam || getDomain() || "";
@@ -40,16 +44,20 @@ export const GestionCofradiaPage: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false); // ✅ modal editar
 
   // ===================== Hooks dependientes =====================
-  const {
-    cortejos,
-    loading: loadingCortejos,
-    error: errorCortejos,
-  } = useCortejos(cofradia?.id || 0);
-  const { puestosUI, loading: loadingPuestos, error: errorPuestos } = usePuestos(cofradia?.id || 0);
+  // Cortejos y puestos gestionan su propia tabla y modales. Aquí solo
+  // se necesitan los cargos y tramos, que aún usan el listado simple.
+  // Los cortejos se piden también en esta pantalla porque los tramos
+  // cuelgan de un cortejo concreto.
+  const { cortejos } = useCortejos(cofradia?.id || 0);
   const { cargosUI, loading: loadingCargos, error: errorCargos } = useCargos(cofradia?.id || 0);
-  const { insigniasUI } = useInsigniasWithElements(cofradia?.id || 0);
-  const cortejoId = cortejos[0]?.id || 0;
-  const { tramosUI } = useTramos(cofradia?.id || 0, cortejoId);
+  // Los tramos cuelgan de un cortejo, así que la página recuerda cuál
+  // está abierto. Antes se usaba siempre el primero, sin poder elegir.
+  const [cortejoSeleccionado, setCortejoSeleccionado] = useState(0);
+  useEffect(() => {
+    if (cortejoSeleccionado === 0 && cortejos.length > 0) {
+      setCortejoSeleccionado(cortejos[0].id);
+    }
+  }, [cortejos, cortejoSeleccionado]);
 
   // ===================== Guards =====================
   if (loading) return <p>Cargando cofradía...</p>;
@@ -89,132 +97,84 @@ export const GestionCofradiaPage: React.FC = () => {
 
   // ===================== Render =====================
   return (
-    <div className="space-y-6">
-      <CofradiaHeader
-        cofradia={cofradia}
-        onEdit={handleEditCofradia}
-        onDelete={handleDeleteCofradia}
-        onClone={handleOpenClone}
-      />
+    <ToastProvider>
+      <div className="space-y-6">
+        <CofradiaHeader
+          cofradia={cofradia}
+          onEdit={handleEditCofradia}
+          onDelete={handleDeleteCofradia}
+          onClone={handleOpenClone}
+        />
 
-      {/* Cortejos */}
-      <section className="p-4 bg-white rounded shadow">
-        <h2 className="text-xl font-bold mb-2">Cortejos</h2>
-        {loadingCortejos ? (
-          <p>Cargando cortejos...</p>
-        ) : errorCortejos ? (
-          <p className="text-red-600">{errorCortejos}</p>
+        {/* Cortejos */}
+        <GestionCortejos cofradiaId={cofradia.id} />
+
+        {/* Puestos */}
+        <GestionPuestos cofradiaId={cofradia.id} />
+
+        {/* Cargos (pendiente de migrar a tabla) */}
+        {loadingCargos ? (
+          <p className="text-sm text-gray-500">Cargando cargos...</p>
+        ) : errorCargos ? (
+          <p className="text-sm text-red-600">{errorCargos}</p>
         ) : (
-          <CortejosCarousel
-            cortejos={cortejos}
-            onView={() => {
-              // TODO: implementar "Ver cortejo"
-            }}
-            onEdit={() => {
-              // TODO: implementar "Editar cortejo"
-            }}
-            onDelete={() => {
-              // TODO: implementar "Eliminar cortejo"
-            }}
-            onAdd={() => {
-              // TODO: implementar "Añadir cortejo"
+          <ListCard
+            type="cargos"
+            items={cargosUI}
+            descripcion="Oficios de la hermandad dentro de la junta directiva."
+            onEdit={
+              esDMG
+                ? () => {
+                    // TODO: implementar "Editar cargo"
+                  }
+                : undefined
+            }
+            onAdd={
+              esDMG
+                ? () => {
+                    // TODO: implementar "Añadir cargo"
+                  }
+                : undefined
+            }
+          />
+        )}
+
+        {/* Insignias */}
+        <GestionInsignias cofradiaId={cofradia.id} cortejos={cortejos} />
+
+        {/* Tramos */}
+        <GestionTramos
+          cofradiaId={cofradia.id}
+          cortejos={cortejos}
+          cortejoSeleccionado={cortejoSeleccionado}
+          onCambiarCortejo={setCortejoSeleccionado}
+        />
+
+        {/* Modal clonar */}
+        {cloneModalOpen && (
+          <ClonarCofradiaModal
+            isOpen={cloneModalOpen}
+            cofradia={cofradia}
+            loading={cloneLoading}
+            errorMessage={cloneError}
+            onClose={() => setCloneModalOpen(false)}
+            onConfirmClone={handleConfirmClone}
+          />
+        )}
+
+        {/* Modal editar */}
+        {editModalOpen && (
+          <EditarCofradiaModal
+            isOpen={editModalOpen}
+            cofradia={cofradia}
+            onClose={() => setEditModalOpen(false)}
+            onSuccess={async () => {
+              await refetch(); // refresca la data
+              setEditModalOpen(false);
             }}
           />
         )}
-      </section>
-
-      {/* Puestos / Cargos */}
-      <section className="p-4 bg-white rounded shadow">
-        <h2 className="text-xl font-bold mb-4">Puestos / Cargos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {loadingPuestos ? (
-            <p>Cargando puestos...</p>
-          ) : errorPuestos ? (
-            <p className="text-red-600">{errorPuestos}</p>
-          ) : (
-            <ListCard
-              type="puestos"
-              items={puestosUI}
-              onEdit={() => {
-                // TODO: implementar "Editar puesto"
-              }}
-              onAdd={() => {
-                // TODO: implementar "Añadir puesto"
-              }}
-            />
-          )}
-
-          {loadingCargos ? (
-            <p>Cargando cargos...</p>
-          ) : errorCargos ? (
-            <p className="text-red-600">{errorCargos}</p>
-          ) : (
-            <ListCard
-              type="cargos"
-              items={cargosUI}
-              onEdit={() => {
-                // TODO: implementar "Editar cargo"
-              }}
-              onAdd={() => {
-                // TODO: implementar "Añadir cargo"
-              }}
-            />
-          )}
-        </div>
-      </section>
-
-      {/* Insignias / Tramos */}
-      <section className="p-4 bg-white rounded shadow">
-        <h2 className="text-xl font-bold mb-4">Insignias y Tramos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ListCard
-            type="insignias"
-            items={insigniasUI}
-            onEdit={() => {
-              // TODO: implementar "Editar insignia"
-            }}
-            onAdd={() => {
-              // TODO: implementar "Añadir insignia"
-            }}
-          />
-
-          <ListCard
-            type="tramos"
-            items={tramosUI}
-            onEdit={() => {
-              // TODO: implementar "Editar tramo"
-            }}
-            onAdd={() => {
-              // TODO: implementar "Añadir tramo"
-            }}
-          />
-        </div>
-      </section>
-
-      {/* Modal clonar */}
-      {cloneModalOpen && (
-        <ClonarCofradiaModal
-          isOpen={cloneModalOpen}
-          cofradia={cofradia}
-          loading={cloneLoading}
-          errorMessage={cloneError}
-          onClose={() => setCloneModalOpen(false)}
-          onConfirmClone={handleConfirmClone}
-        />
-      )}
-
-      {/* Modal editar ✅ */}
-      {editModalOpen && (
-        <EditarCofradiaModal
-          isOpen={editModalOpen}
-          cofradia={cofradia}
-          onClose={() => setEditModalOpen(false)}
-          onSuccess={async () => {
-            await refetch(); // refresca la data
-            setEditModalOpen(false);
-          }}
-        />
-      )}
-    </div>
+      </div>
+    </ToastProvider>
   );
 };

@@ -61,7 +61,10 @@ export const App: React.FC = () => {
         <Route
           path="cofradia/:cofradiaId/gestionar"
           element={
-            <RoleProtectedRoute allowedRoles={["DMG"]}>
+            // Ambos roles entran: el AUXILIAR consulta en modo lectura
+            // (las tablas le ocultan crear/editar/borrar). Bloquearle la
+            // página entera impediría la consulta que sí pide la HU.
+            <RoleProtectedRoute allowedRoles={["DMG", "AUXILIAR"]}>
               <GestionCofradiaPage />
             </RoleProtectedRoute>
           }

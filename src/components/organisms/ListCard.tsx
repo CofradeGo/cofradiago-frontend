@@ -11,8 +11,11 @@ export interface ListItemUI {
 interface Props {
   type: ListCardType;
   items: ListItemUI[];
-  onAdd: () => void;
-  onEdit?: (id: number) => void; // opcional
+  /** Opcionales: el rol AUXILIAR consulta pero no modifica, así que no se pasan. */
+  onAdd?: () => void;
+  onEdit?: (id: number) => void;
+  /** Explica qué contiene la lista, en el mismo sitio que el título. */
+  descripcion?: string;
 }
 
 const typeConfig: Record<ListCardType, { label: string; buttonClasses: string }> = {
@@ -38,7 +41,7 @@ const typeConfig: Record<ListCardType, { label: string; buttonClasses: string }>
   },
 };
 
-export const ListCard: React.FC<Props> = ({ type, items, onAdd, onEdit }) => {
+export const ListCard: React.FC<Props> = ({ type, items, onAdd, onEdit, descripcion }) => {
   const { label, buttonClasses } = typeConfig[type];
   const hasItems = items.length > 0;
   const enableScroll = items.length > 5;
@@ -48,13 +51,16 @@ export const ListCard: React.FC<Props> = ({ type, items, onAdd, onEdit }) => {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">{label}</h3>
+          <h3 className="text-base font-semibold text-gray-900">{label}</h3>
+          {descripcion && <p className="text-sm text-gray-500 mt-0.5">{descripcion}</p>}
           <span className="text-sm text-gray-500">{items.length} registrados</span>
         </div>
 
-        <button onClick={onAdd} className={buttonClasses}>
-          + Añadir
-        </button>
+        {onAdd && (
+          <button onClick={onAdd} className={buttonClasses}>
+            + Añadir
+          </button>
+        )}
       </div>
 
       {/* Listado */}

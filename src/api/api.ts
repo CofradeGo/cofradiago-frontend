@@ -45,8 +45,14 @@ export const CofradiaEndpoints = {
 export const CortejoEndpoints = {
   listByCofradia: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos`, // GET → listado de cortejos de una cofradía
   create: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos`, // POST → crear cortejo (DMG)
-  update: (cortejoId: number) => `/cortejos/${cortejoId}`, // PUT → actualizar cortejo (DMG)
-  delete: (cortejoId: number) => `/cortejos/${cortejoId}`, // DELETE → borrar cortejo (DMG)
+  // El router va montado en /cofradias/:cofradiaId/cortejos, así que la
+  // ruta real es /cofradias/:cofradiaId/cortejos/:cortejoId. Antes se
+  // llamaba a /cortejos/:id, que devolvía 404.
+  update: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}`,
+  delete: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}`,
+  reorder: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos/orden`,
 };
 
 // -------------------- Puestos --------------------
@@ -78,6 +84,9 @@ export const TramoEndpoints = {
 
   delete: (cofradiaId: number, cortejoId: number, tramoId: number) =>
     `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}`,
+
+  reorder: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/orden`,
 };
 
 // -------------------- Insignias --------------------
