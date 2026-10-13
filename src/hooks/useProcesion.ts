@@ -31,6 +31,14 @@ export interface InsigniaEnTramo {
 export interface CargoEnTramo {
   id: number;
   nombre: string;
+  /** Cuántas plazas de ese cargo hay en el tramo. */
+  cantidad: number;
+}
+
+/** Un cargo al que se le indica cuántas plazas ocupa en el tramo. */
+export interface CargoConPlazas {
+  id: number;
+  cantidad: number;
 }
 
 export interface TramoEnProcesion {
@@ -127,15 +135,18 @@ export const useProcesion = (cofradiaId: number, cortejoId: number) => {
     }
   };
 
-  /** Guarda qué cargos van en el tramo. Manda la lista completa. */
+  /**
+   * Guarda qué cargos van en el tramo y cuántas plazas de cada uno.
+   * Manda la lista completa.
+   */
   const guardarCargos = async (
     cortejoId: number,
     tramoId: number,
-    cargoIds: number[],
+    cargos: CargoConPlazas[],
   ): Promise<void> => {
     try {
       await axiosClient.put(TramoEndpoints.setCargos(cofradiaId, cortejoId, tramoId), {
-        cargoIds,
+        cargos,
       });
       await refetch();
     } catch (err) {

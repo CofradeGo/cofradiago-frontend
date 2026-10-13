@@ -1,6 +1,7 @@
 import React from "react";
 import { Award, ChevronDown, ChevronRight, Flag, Trash2, Users } from "lucide-react";
 import { SelectorAsignacion } from "./SelectorAsignacion";
+import { SelectorCargos } from "./SelectorCargos";
 import type { TramoEnProcesion } from "../../../hooks/useProcesion";
 
 interface ProcesionTramosProps {
@@ -14,7 +15,7 @@ interface ProcesionTramosProps {
   cargosDisponibles?: { id: number; nombre: string }[];
   guardando?: boolean;
   onGuardarInsignias?: (tramoId: number, ids: number[]) => Promise<void>;
-  onGuardarCargos?: (tramoId: number, ids: number[]) => Promise<void>;
+  onGuardarCargos?: (tramoId: number, cargos: { id: number; cantidad: number }[]) => Promise<void>;
   onBorrarTramo?: (tramo: TramoEnProcesion) => void;
 }
 
@@ -87,7 +88,12 @@ export const ProcesionTramos: React.FC<ProcesionTramosProps> = ({
                       tramo.insignias.length === 1 ? "insignia" : "insignias"
                     }`,
                   tramo.cargos.length > 0 &&
-                    `${tramo.cargos.length} ${tramo.cargos.length === 1 ? "cargo" : "cargos"}`,
+                    (() => {
+                      const plazas = tramo.cargos.reduce((n, c) => n + c.cantidad, 0);
+                      return `${tramo.cargos.length} ${
+                        tramo.cargos.length === 1 ? "cargo" : "cargos"
+                      } · ${plazas} ${plazas === 1 ? "plaza" : "plazas"}`;
+                    })(),
                   tramo.puestos.length > 0 &&
                     `${tramo.puestos.length} ${tramo.puestos.length === 1 ? "puesto" : "puestos"}`,
                   tramo.puestos.length > 0 && `${gente} ${gente === 1 ? "persona" : "personas"}`,
@@ -141,12 +147,11 @@ export const ProcesionTramos: React.FC<ProcesionTramosProps> = ({
                     />
                   )}
                   {onGuardarCargos && (
-                    <SelectorAsignacion
-                      titulo="Cargos"
+                    <SelectorCargos
                       guardados={tramo.cargos}
                       disponibles={cargosDisponibles}
                       guardando={guardando}
-                      onGuardar={(ids) => onGuardarCargos(tramo.id, ids)}
+                      onGuardar={(lista) => onGuardarCargos(tramo.id, lista)}
                     />
                   )}
                 </div>

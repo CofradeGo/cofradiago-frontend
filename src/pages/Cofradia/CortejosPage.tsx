@@ -132,11 +132,14 @@ export const CortejosPage: React.FC = () => {
     }
   };
 
-  const guardarCargosDelTramo = async (tramoId: number, ids: number[]) => {
+  const guardarCargosDelTramo = async (
+    tramoId: number,
+    cargos: { id: number; cantidad: number }[],
+  ) => {
     if (cortejoId === null) return;
     setGuardando(true);
     try {
-      await guardarCargos(cortejoId, tramoId, ids);
+      await guardarCargos(cortejoId, tramoId, cargos);
       toast.success("Cargos del tramo guardados");
     } catch (err) {
       const mensaje = err instanceof Error ? err.message : "No se ha podido guardar";
@@ -227,6 +230,12 @@ export const CortejosPage: React.FC = () => {
                 <strong className="text-gray-900">{procesion?.totales.hermanos}</strong>{" "}
                 {procesion?.totales.hermanos === 1 ? "persona" : "personas"}
               </span>
+              {procesion && procesion.totales.cargos > 0 && (
+                <span>
+                  <strong className="text-gray-900">{procesion.totales.cargos}</strong>{" "}
+                  {procesion.totales.cargos === 1 ? "plaza" : "plazas"}
+                </span>
+              )}
             </div>
 
             <ProcesionTramos
