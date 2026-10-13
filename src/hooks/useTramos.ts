@@ -45,6 +45,14 @@ const mensajeDe = (err: unknown, porDefecto: string): string => {
 export const useTramos = (cofradiaId: number, cortejoId: number) => {
   const [tramos, setTramos] = useState<Tramo[]>([]);
   const [loading, setLoading] = useState(false);
+  /**
+   * Error al cargar la lista, no al guardar.
+   *
+   * La tabla sustituye las filas por este aviso, así que una mutación
+   * fallida no debe tocarlo: se propaga con `throw` y quien la llama
+   * la enseña en el formulario o en un toast. Si se guardara aquí,
+   * un alta duplicada dejaría la tabla entera sin filas.
+   */
   const [error, setError] = useState<string | null>(null);
 
   const activo = cofradiaId > 0 && cortejoId > 0;
@@ -88,7 +96,6 @@ export const useTramos = (cofradiaId: number, cortejoId: number) => {
       return res.data.tramo;
     } catch (err) {
       const mensaje = mensajeDe(err, "Error al crear el tramo");
-      setError(mensaje);
       throw new Error(mensaje);
     }
   };
@@ -106,7 +113,6 @@ export const useTramos = (cofradiaId: number, cortejoId: number) => {
       return res.data.tramo;
     } catch (err) {
       const mensaje = mensajeDe(err, "Error al editar el tramo");
-      setError(mensaje);
       throw new Error(mensaje);
     }
   };
@@ -120,7 +126,6 @@ export const useTramos = (cofradiaId: number, cortejoId: number) => {
       await fetchTramos();
     } catch (err) {
       const mensaje = mensajeDe(err, "Error al borrar el tramo");
-      setError(mensaje);
       throw new Error(mensaje);
     }
   };
@@ -141,7 +146,6 @@ export const useTramos = (cofradiaId: number, cortejoId: number) => {
       setTramos(res.data.tramos);
     } catch (err) {
       const mensaje = mensajeDe(err, "Error al guardar el nuevo orden");
-      setError(mensaje);
       throw new Error(mensaje);
     }
   };

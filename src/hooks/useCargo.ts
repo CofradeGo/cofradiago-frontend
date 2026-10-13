@@ -1,133 +1,118 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import axiosClient from "../api/axiosClient";
 import { CargoEndpoints } from "../api/api";
+import type { Cargo, CargoUI } from "../types/Cargo";
 
-export interface Cargo {
-  id: number;
-  cofradiaId: number;
-  nombre: string;
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
+interface ApiErrorResponse {
+  error?: string;
+  message?: string;
 }
 
-export interface CargoUI {
-  id: number;
-  title: string;
-}
+/** El backend responde { error, message } tras la unificación del contrato. */
+const mensajeDe = (err: unknown, porDefecto: string): string => {
+  if (isAxiosError<ApiErrorResponse>(err)) {
+    return err.response?.data?.message ?? err.response?.data?.error ?? porDefecto;
+  }
+  if (err instanceof Error) return err.message;
+  return porDefecto;
+};
 
-interface UseCargosReturn {
-  cargos: Cargo[];
-  cargosUI: CargoUI[];
-  loading: boolean;
-  error: string | null;
-  createCargo: (nombre: string) => Promise<void>;
-  updateCargo: (cargoId: number, nombre: string) => Promise<void>;
-  deleteCargo: (cargoId: number) => Promise<void>;
-  refresh: () => Promise<void>;
-}
+const porNombre = (a: Cargo, b: Cargo) => a.nombre.localeCompare(b.nombre, "es");
 
-export const useCargos = (cofradiaId: number): UseCargosReturn => {
+/**
+ * Cargos de una cofradía: los oficios de la junta directiva.
+ *
+ * Lanza el error en lugar de solo guardarlo: el formulario necesita
+ * mostrar el mensaje real del backend (por ejemplo, que el nombre ya
+ * está en uso) en lugar de un texto genérico.
+ */
+export const useCargos = (cofradiaId: number) => {
   const [cargos, setCargos] = useState<Cargo[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  /**
+   * Error al cargar la lista, no al guardar.
+   *
+   * La tabla sustituye las filas por este aviso, así que una mutación
+   * fallida no debe tocarlo: se propaga con `throw` y quien la llama
+   * la enseña en el formulario o en un toast. Si se guardara aquí,
+   * un alta duplicada dejaría la tabla entera sin filas.
+   */
   const [error, setError] = useState<string | null>(null);
 
-  // Adaptador para UI
-  const cargosUI: CargoUI[] = cargos.map((c) => ({
-    id: c.id,
-    title: c.nombre,
-  }));
+  const activo = cofradiaId > 0;
 
-  const fetchCargos = useCallback(async () => {
-    if (!cofradiaId) return;
+  const refetch = useCallback(async () => {
+    if (!activo) {
+      setCargos([]);
+      return;
+    }
 
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      setError(null);
       const res = await axiosClient.get<Cargo[]>(CargoEndpoints.list(cofradiaId));
-      setCargos(res.data);
-    } catch (err: unknown) {
-      console.error("Error al listar cargos:", err);
-      if (err instanceof Error) setError(err.message);
-      else setError("Error desconocido al listar cargos");
+      setCargos([...res.data].sort(porNombre));
+    } catch (err) {
+      setError(mensajeDe(err, "Error al cargar los cargos"));
     } finally {
       setLoading(false);
     }
-  }, [cofradiaId]);
+  }, [cofradiaId, activo]);
 
   useEffect(() => {
-    fetchCargos();
-  }, [fetchCargos]);
+    void refetch();
+  }, [refetch]);
 
-  const createCargo = useCallback(
-    async (nombre: string) => {
-      if (!cofradiaId) return;
-      setLoading(true);
+  const crearCargo = async (nombre: string): Promise<Cargo> => {
+    try {
       setError(null);
-      try {
-        const res = await axiosClient.post<{ cargo: Cargo }>(CargoEndpoints.create(cofradiaId), {
-          nombre,
-        });
-        setCargos((prev) => [...prev, res.data.cargo]);
-      } catch (err: unknown) {
-        console.error("Error al crear cargo:", err);
-        if (err instanceof Error) setError(err.message);
-        else setError("Error desconocido al crear cargo");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [cofradiaId],
-  );
+      const res = await axiosClient.post<{ cargo: Cargo }>(CargoEndpoints.create(cofradiaId), {
+        nombre,
+      });
+      setCargos((prev) => [...prev, res.data.cargo].sort(porNombre));
+      return res.data.cargo;
+    } catch (err) {
+      const mensaje = mensajeDe(err, "Error al crear el cargo");
+      throw new Error(mensaje);
+    }
+  };
 
-  const updateCargo = useCallback(
-    async (cargoId: number, nombre: string) => {
-      if (!cofradiaId) return;
-      setLoading(true);
+  const editarCargo = async (cargoId: number, nombre: string): Promise<Cargo> => {
+    try {
       setError(null);
-      try {
-        const res = await axiosClient.put<{ cargo: Cargo }>(
-          CargoEndpoints.update(cofradiaId, cargoId),
-          { nombre },
-        );
-        setCargos((prev) => prev.map((c) => (c.id === cargoId ? res.data.cargo : c)));
-      } catch (err: unknown) {
-        console.error("Error al editar cargo:", err);
-        if (err instanceof Error) setError(err.message);
-        else setError("Error desconocido al editar cargo");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [cofradiaId],
-  );
+      const res = await axiosClient.put<{ cargo: Cargo }>(
+        CargoEndpoints.update(cofradiaId, cargoId),
+        { nombre },
+      );
+      setCargos((prev) => prev.map((c) => (c.id === cargoId ? res.data.cargo : c)).sort(porNombre));
+      return res.data.cargo;
+    } catch (err) {
+      const mensaje = mensajeDe(err, "Error al editar el cargo");
+      throw new Error(mensaje);
+    }
+  };
 
-  const deleteCargo = useCallback(
-    async (cargoId: number) => {
-      if (!cofradiaId) return;
-      setLoading(true);
+  const borrarCargo = async (cargoId: number): Promise<void> => {
+    try {
       setError(null);
-      try {
-        await axiosClient.delete(CargoEndpoints.delete(cofradiaId, cargoId));
-        setCargos((prev) => prev.filter((c) => c.id !== cargoId));
-      } catch (err: unknown) {
-        console.error("Error al borrar cargo:", err);
-        if (err instanceof Error) setError(err.message);
-        else setError("Error desconocido al borrar cargo");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [cofradiaId],
-  );
+      await axiosClient.delete(CargoEndpoints.delete(cofradiaId, cargoId));
+      setCargos((prev) => prev.filter((c) => c.id !== cargoId));
+    } catch (err) {
+      const mensaje = mensajeDe(err, "Error al borrar el cargo");
+      throw new Error(mensaje);
+    }
+  };
 
   return {
     cargos,
-    cargosUI, // ✅ version adaptada para la UI
+    // La vista mapeada la consumen los listados de tipo tarjeta.
+    cargosUI: cargos.map((c): CargoUI => ({ id: c.id, title: c.nombre })),
     loading,
     error,
-    createCargo,
-    updateCargo,
-    deleteCargo,
-    refresh: fetchCargos,
+    refetch,
+    crearCargo,
+    editarCargo,
+    borrarCargo,
   };
 };

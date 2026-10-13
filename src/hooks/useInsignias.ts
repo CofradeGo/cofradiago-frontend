@@ -18,15 +18,23 @@ const mensajeDe = (err: unknown, porDefecto: string): string => {
 };
 
 /**
- * Insignias de una cofradía.
+ * Insignias de una cofradía: listado y CRUD.
  *
- * Complementa a useInsigniasConElementos, que solo lee y además carga
- * los elementos de una en una. Aquí solo gestionamos la lista y el
- * CRUD; los elementos tienen su propia pantalla.
+ * Los elementos de cada insignia (varas, faroles...) tienen su propio
+ * CRUD, así que aquí no se cargan: pedirlos uno a uno por insignia
+ * multiplicaba las peticiones sin que la tabla los usara.
  */
 export const useInsignias = (cofradiaId: number) => {
   const [insignias, setInsignias] = useState<Insignia[]>([]);
   const [loading, setLoading] = useState(false);
+  /**
+   * Error al cargar la lista, no al guardar.
+   *
+   * La tabla sustituye las filas por este aviso, así que una mutación
+   * fallida no debe tocarlo: se propaga con `throw` y quien la llama
+   * la enseña en el formulario o en un toast. Si se guardara aquí,
+   * un alta duplicada dejaría la tabla entera sin filas.
+   */
   const [error, setError] = useState<string | null>(null);
 
   const activo = cofradiaId > 0;
@@ -63,7 +71,6 @@ export const useInsignias = (cofradiaId: number) => {
       return res.data.insignia;
     } catch (err) {
       const mensaje = mensajeDe(err, "Error al crear la insignia");
-      setError(mensaje);
       throw new Error(mensaje);
     }
   };
@@ -86,7 +93,6 @@ export const useInsignias = (cofradiaId: number) => {
       return res.data.insignia;
     } catch (err) {
       const mensaje = mensajeDe(err, "Error al editar la insignia");
-      setError(mensaje);
       throw new Error(mensaje);
     }
   };
@@ -98,7 +104,6 @@ export const useInsignias = (cofradiaId: number) => {
       setInsignias((prev) => prev.filter((i) => i.id !== insigniaId));
     } catch (err) {
       const mensaje = mensajeDe(err, "Error al borrar la insignia");
-      setError(mensaje);
       throw new Error(mensaje);
     }
   };

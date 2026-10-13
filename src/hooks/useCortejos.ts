@@ -28,6 +28,14 @@ const mensajeDe = (err: unknown, porDefecto: string): string => {
 export const useCortejos = (cofradiaId: number) => {
   const [cortejos, setCortejos] = useState<Cortejo[]>([]);
   const [loading, setLoading] = useState(false);
+  /**
+   * Error al cargar la lista, no al guardar.
+   *
+   * La tabla sustituye las filas por este aviso, así que una mutación
+   * fallida no debe tocarlo: se propaga con `throw` y quien la llama
+   * la enseña en el formulario o en un toast. Si se guardara aquí,
+   * un alta duplicada dejaría la tabla entera sin filas.
+   */
   const [error, setError] = useState<string | null>(null);
 
   const activo = cofradiaId > 0;
@@ -62,7 +70,6 @@ export const useCortejos = (cofradiaId: number) => {
       setCortejos((prev) => [...prev, res.data.cortejo].sort((a, b) => a.orden - b.orden));
       return res.data.cortejo;
     } catch (err) {
-      setError(mensajeDe(err, "Error al crear el cortejo"));
       throw new Error(mensajeDe(err, "Error al crear el cortejo"));
     }
   };
@@ -81,7 +88,6 @@ export const useCortejos = (cofradiaId: number) => {
       );
       return res.data.cortejo;
     } catch (err) {
-      setError(mensajeDe(err, "Error al editar el cortejo"));
       throw new Error(mensajeDe(err, "Error al editar el cortejo"));
     }
   };
@@ -92,7 +98,6 @@ export const useCortejos = (cofradiaId: number) => {
       await axiosClient.delete(CortejoEndpoints.delete(cofradiaId, cortejoId));
       setCortejos((prev) => prev.filter((c) => c.id !== cortejoId));
     } catch (err) {
-      setError(mensajeDe(err, "Error al borrar el cortejo"));
       throw new Error(mensajeDe(err, "Error al borrar el cortejo"));
     }
   };
@@ -111,7 +116,6 @@ export const useCortejos = (cofradiaId: number) => {
       );
       setCortejos(res.data.cortejos);
     } catch (err) {
-      setError(mensajeDe(err, "Error al guardar el nuevo orden"));
       throw new Error(mensajeDe(err, "Error al guardar el nuevo orden"));
     }
   };

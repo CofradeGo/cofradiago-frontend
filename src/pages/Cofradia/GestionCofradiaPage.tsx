@@ -5,23 +5,19 @@ import { CofradiaHeader } from "../../components/molecules/CofradiaHeader";
 import { ClonarCofradiaModal } from "../../components/organisms/ClonarCofradiaModal";
 import { EditarCofradiaModal } from "../../components/organisms/EditarCofradiaModal"; // ✅ nuevo
 import { useCortejos } from "../../hooks/useCortejos";
-import { useCargos } from "../../hooks/useCargo";
-import { ListCard } from "../../components/organisms/ListCard";
 import { ToastProvider } from "../../components/organisms/toast/ToastProvider";
 import { GestionCortejos } from "../../components/organisms/GestionCortejos";
 import { GestionPuestos } from "../../components/organisms/GestionPuestos";
 import { GestionInsignias } from "../../components/organisms/GestionInsignias";
 import { GestionTramos } from "../../components/organisms/GestionTramos";
+import { GestionCargos } from "../../components/organisms/GestionCargos";
 import type { Cofradia } from "../../types/Cofradia";
 import { ROUTES } from "../../routes/routes";
 import { getDomain } from "../../utils/domain"; // helper
-import { getUserFromStorage } from "../../utils/authToken";
 
 export const GestionCofradiaPage: React.FC = () => {
   const { cofradiaId, domain: domainParam } = useParams<{ cofradiaId: string; domain: string }>();
   const navigate = useNavigate();
-  // El AUXILIAR entra en modo lectura: sin acciones de edición.
-  const esDMG = getUserFromStorage()?.role === "DMG";
 
   // ✅ dominio robusto (param o fallback)
   const domain = domainParam || getDomain() || "";
@@ -49,7 +45,6 @@ export const GestionCofradiaPage: React.FC = () => {
   // Los cortejos se piden también en esta pantalla porque los tramos
   // cuelgan de un cortejo concreto.
   const { cortejos } = useCortejos(cofradia?.id || 0);
-  const { cargosUI, loading: loadingCargos, error: errorCargos } = useCargos(cofradia?.id || 0);
   // Los tramos cuelgan de un cortejo, así que la página recuerda cuál
   // está abierto. Antes se usaba siempre el primero, sin poder elegir.
   const [cortejoSeleccionado, setCortejoSeleccionado] = useState(0);
@@ -112,32 +107,8 @@ export const GestionCofradiaPage: React.FC = () => {
         {/* Puestos */}
         <GestionPuestos cofradiaId={cofradia.id} />
 
-        {/* Cargos (pendiente de migrar a tabla) */}
-        {loadingCargos ? (
-          <p className="text-sm text-gray-500">Cargando cargos...</p>
-        ) : errorCargos ? (
-          <p className="text-sm text-red-600">{errorCargos}</p>
-        ) : (
-          <ListCard
-            type="cargos"
-            items={cargosUI}
-            descripcion="Oficios de la hermandad dentro de la junta directiva."
-            onEdit={
-              esDMG
-                ? () => {
-                    // TODO: implementar "Editar cargo"
-                  }
-                : undefined
-            }
-            onAdd={
-              esDMG
-                ? () => {
-                    // TODO: implementar "Añadir cargo"
-                  }
-                : undefined
-            }
-          />
-        )}
+        {/* Cargos */}
+        <GestionCargos cofradiaId={cofradia.id} />
 
         {/* Insignias */}
         <GestionInsignias cofradiaId={cofradia.id} cortejos={cortejos} />
