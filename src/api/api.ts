@@ -33,6 +33,9 @@ export const HermanoEndpoints = {
 
 // -------------------- Cofradías --------------------
 export const CofradiaEndpoints = {
+  // El PUT filtra los campos y descarta "estado", así que abrir y cerrar
+  // va por su propio endpoint.
+  setEstado: (cofradiaId: number) => `/cofradia/${cofradiaId}/estado`,
   list: `/cofradia`, // GET → listado de cofradías de la hermandad activa
   create: `/cofradia`, // POST → crear cofradía (DMG)
   update: (id: number) => `/cofradia/${id}`, // PUT → actualizar cofradía (DMG)

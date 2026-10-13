@@ -10,16 +10,16 @@ import { ClonarCofradiaModal } from "./ClonarCofradiaModal";
 interface Props {
   cofradia: Cofradia | null;
   isDMG: boolean;
-  updateCofradia: (id: number, data: Partial<Cofradia>) => Promise<Cofradia>;
   clonarCofradia: (cofradiaId: number, anioNuevo: number) => Promise<Cofradia>;
+  cambiarEstadoCofradia: (cofradiaId: number, estado: "ABIERTA" | "CERRADA") => Promise<Cofradia>;
   onUpdated: () => void;
 }
 
 export const CofradiaActivaCard: React.FC<Props> = ({
   cofradia,
   isDMG,
-  updateCofradia,
   clonarCofradia,
+  cambiarEstadoCofradia,
   onUpdated,
 }) => {
   const navigate = useNavigate();
@@ -52,13 +52,16 @@ export const CofradiaActivaCard: React.FC<Props> = ({
 
   const handleCloseCofradia = async () => {
     setLoading(true);
+    setErrorMessage("");
     try {
-      await updateCofradia(cofradia.id, { estado: "CERRADA" });
+      await cambiarEstadoCofradia(cofradia.id, "CERRADA");
       onUpdated();
       setModalCerrarOpen(false);
     } catch (err) {
-      console.error("Error cerrando cofradía:", err);
-      alert("Hubo un error al cerrar la cofradía. Inténtalo de nuevo.");
+      // El mensaje real viene del backend. Con un alert genérico se
+      // perdía: no había forma de saber si fallaba por permisos, por
+      // la cofradía o por otra cosa.
+      setErrorMessage(err instanceof Error ? err.message : "No se ha podido cerrar la cofradía");
     } finally {
       setLoading(false);
     }
@@ -129,9 +132,20 @@ export const CofradiaActivaCard: React.FC<Props> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-96">
             <h2 className="text-xl font-bold mb-4">Cerrar Cofradía</h2>
-            <p className="mb-6 text-gray-700">
-              Piensa bien: una vez cerrada, la cofradía no podrá modificarse ni reabrirse.
+            <p className="mb-4 text-gray-700">
+              Al cerrarla deja de admitir cambios: no se podrán crear cortejos, ni añadir hermanos a
+              los puestos, ni reordenar nada. Puedes volver a abrirla más adelante desde el
+              histórico.
             </p>
+
+            {errorMessage && (
+              <p
+                role="alert"
+                className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                {errorMessage}
+              </p>
+            )}
             <div className="flex justify-end gap-3">
               <button
                 className="px-4 py-2 rounded border hover:bg-gray-100"

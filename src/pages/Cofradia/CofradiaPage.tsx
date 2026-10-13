@@ -16,8 +16,8 @@ export const CofradiaPage: React.FC = () => {
     loading,
     error,
     refetch,
-    updateCofradia,
     clonarCofradia,
+    cambiarEstadoCofradia,
     createFullCofradia,
     creating,
     createError,
@@ -135,8 +135,8 @@ export const CofradiaPage: React.FC = () => {
                     key={c.id}
                     cofradia={c}
                     isDMG={!!isDMG}
-                    updateCofradia={updateCofradia}
                     clonarCofradia={clonarCofradia}
+                    cambiarEstadoCofradia={cambiarEstadoCofradia}
                     onUpdated={refetch}
                   />
                 ))}

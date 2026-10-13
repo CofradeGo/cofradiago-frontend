@@ -4,6 +4,20 @@ import { CofradiaEndpoints } from "../api/api";
 import type { Cofradia, CrearCofradiaFullInput } from "../types/Cofradia";
 import { isAxiosError } from "axios";
 
+interface ApiErrorResponse {
+  error?: string;
+  message?: string;
+}
+
+/** El backend responde { error, message }; se enseña el message. */
+const mensajeDeError = (err: unknown, porDefecto: string): string => {
+  if (isAxiosError<ApiErrorResponse>(err)) {
+    return err.response?.data?.message ?? err.response?.data?.error ?? porDefecto;
+  }
+  if (err instanceof Error) return err.message;
+  return porDefecto;
+};
+
 export const useCofradias = () => {
   const [cofradiasActivas, setCofradiasActivas] = useState<Cofradia[]>([]);
   const [historico, setHistorico] = useState<Cofradia[]>([]);
@@ -58,6 +72,43 @@ export const useCofradias = () => {
     } catch (err) {
       console.error("Error actualizando cofradía", err);
       throw err;
+    }
+  };
+
+  /**
+   * Abre o cierra una cofradía.
+   *
+   * No pasa por updateCofradia: ese PUT solo acepta nombre, año y tipo,
+   * y descarta el estado en silencio, así que cerrar una cofradía por
+   * ahí devolvía "No hay cambios que guardar".
+   */
+  const cambiarEstadoCofradia = async (
+    cofradiaId: number,
+    estado: "ABIERTA" | "CERRADA",
+  ): Promise<Cofradia> => {
+    try {
+      setError(null);
+      const res = await axiosClient.patch<{ cofradia: Cofradia }>(
+        CofradiaEndpoints.setEstado(cofradiaId),
+        { estado },
+      );
+
+      const actualizada = res.data.cofradia;
+
+      if (actualizada.estado === "CERRADA") {
+        // Deja de estar entre las activas y pasa al histórico.
+        setCofradiasActivas((prev) => prev.filter((c) => c.id !== cofradiaId));
+        setHistorico((prev) => [actualizada, ...prev.filter((c) => c.id !== cofradiaId)]);
+      } else {
+        setCofradiasActivas((prev) => prev.map((c) => (c.id === cofradiaId ? actualizada : c)));
+        setHistorico((prev) => prev.filter((c) => c.id !== cofradiaId));
+      }
+
+      return actualizada;
+    } catch (err) {
+      const mensaje = mensajeDeError(err, "No se ha podido cambiar el estado de la cofradía");
+      setError(mensaje);
+      throw new Error(mensaje);
     }
   };
 
@@ -136,5 +187,6 @@ export const useCofradias = () => {
     createFullCofradia,
     refetch: fetchCofradias,
     updateCofradia,
+    cambiarEstadoCofradia,
   };
 };
