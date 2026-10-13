@@ -15,6 +15,7 @@ import { PapeletaPage } from "./pages/Papeleta/PapeletaPage";
 import { NotificacionesPage } from "./pages/Notificaciones/NotificacionesPage";
 import { PerfilPage } from "./pages/Perfil/PerfilPage";
 import { GestionCofradiaPage } from "./pages/Cofradia/GestionCofradiaPage";
+import { CortejosPage } from "./pages/Cofradia/CortejosPage";
 
 import { RoleProtectedRoute } from "./routes/RoleProtectedRoute";
 import { PrivateRoute } from "./routes/PrivateRoute";
@@ -58,6 +59,15 @@ export const App: React.FC = () => {
         <Route index element={<DashboardPage />} />
 
         {/* Rutas específicas primero */}
+        <Route
+          path="cofradia/:cofradiaId/cortejos"
+          element={
+            <RoleProtectedRoute allowedRoles={["DMG", "AUXILIAR"]}>
+              <CortejosPage />
+            </RoleProtectedRoute>
+          }
+        />
+
         <Route
           path="cofradia/:cofradiaId/gestionar"
           element={

@@ -4,7 +4,7 @@ import { EmptyState } from "../atoms/EmptyState";
 import { ActionButton } from "../atoms/ActionButton";
 import { useState, useEffect, useRef } from "react";
 import { MoreHorizontal } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ClonarCofradiaModal } from "./ClonarCofradiaModal";
 
 interface Props {
@@ -22,6 +22,7 @@ export const CofradiaActivaCard: React.FC<Props> = ({
   clonarCofradia,
   onUpdated,
 }) => {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalCerrarOpen, setModalCerrarOpen] = useState(false);
   const [modalClonarOpen, setModalClonarOpen] = useState(false);
@@ -86,12 +87,7 @@ export const CofradiaActivaCard: React.FC<Props> = ({
       <CofradiaInfo cofradia={cofradia} />
 
       <div className="mt-4 flex items-center justify-between">
-        <ActionButton
-          label="Ver Cortejos"
-          onClick={() => {
-            // TODO: implementar "Ver cortejos"
-          }}
-        />
+        <ActionButton label="Ver Cortejos" onClick={() => navigate(`${cofradia.id}/cortejos`)} />
         {isDMG && (
           <div className="relative" ref={menuRef}>
             <button
