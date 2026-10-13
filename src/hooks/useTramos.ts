@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import axiosClient from "../api/axiosClient";
 import { TramoEndpoints } from "../api/api";
 
@@ -19,48 +20,131 @@ export interface TramoUI {
   subtitle?: string;
 }
 
-interface UseTramosReturn {
-  tramos: Tramo[];
-  tramosUI: TramoUI[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
+export interface TramoInput {
+  nombre: string;
 }
+
+interface ApiErrorResponse {
+  error?: string;
+  message?: string;
+}
+
+/** El backend responde { error, message } tras la unificación del contrato. */
+const mensajeDe = (err: unknown, porDefecto: string): string => {
+  if (isAxiosError<ApiErrorResponse>(err)) {
+    return err.response?.data?.message ?? err.response?.data?.error ?? porDefecto;
+  }
+  if (err instanceof Error) return err.message;
+  return porDefecto;
+};
 
 /* =======================
    Hook
 ======================= */
 
-export const useTramos = (cofradiaId: number, cortejoId: number): UseTramosReturn => {
+export const useTramos = (cofradiaId: number, cortejoId: number) => {
   const [tramos, setTramos] = useState<Tramo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTramos = useCallback(async () => {
-    if (!cofradiaId || !cortejoId) return;
+  const activo = cofradiaId > 0 && cortejoId > 0;
 
-    setLoading(true);
-    setError(null);
+  const fetchTramos = useCallback(async () => {
+    if (!activo) {
+      setTramos([]);
+      return;
+    }
 
     try {
+      setLoading(true);
+      setError(null);
       const res = await axiosClient.get<Tramo[]>(TramoEndpoints.list(cofradiaId, cortejoId));
-
       setTramos(res.data);
-    } catch (err: unknown) {
-      console.error("Error al cargar tramos:", err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error desconocido al cargar tramos");
-      }
+    } catch (err) {
+      setError(mensajeDe(err, "Error al cargar los tramos"));
     } finally {
       setLoading(false);
     }
-  }, [cofradiaId, cortejoId]);
+  }, [cofradiaId, cortejoId, activo]);
 
   useEffect(() => {
-    fetchTramos();
+    void fetchTramos();
   }, [fetchTramos]);
+
+  /* =======================
+     Mutaciones
+  ======================= */
+
+  const crearTramo = async (input: TramoInput): Promise<Tramo> => {
+    if (!activo) throw new Error("Selecciona un cortejo antes de añadir tramos");
+
+    try {
+      setError(null);
+      const res = await axiosClient.post<{ tramo: Tramo }>(
+        TramoEndpoints.create(cofradiaId, cortejoId),
+        input,
+      );
+      await fetchTramos();
+      return res.data.tramo;
+    } catch (err) {
+      const mensaje = mensajeDe(err, "Error al crear el tramo");
+      setError(mensaje);
+      throw new Error(mensaje);
+    }
+  };
+
+  const editarTramo = async (tramoId: number, input: TramoInput): Promise<Tramo> => {
+    if (!activo) throw new Error("Selecciona un cortejo antes de editar");
+
+    try {
+      setError(null);
+      const res = await axiosClient.put<{ tramo: Tramo }>(
+        TramoEndpoints.update(cofradiaId, cortejoId, tramoId),
+        input,
+      );
+      await fetchTramos();
+      return res.data.tramo;
+    } catch (err) {
+      const mensaje = mensajeDe(err, "Error al editar el tramo");
+      setError(mensaje);
+      throw new Error(mensaje);
+    }
+  };
+
+  const borrarTramo = async (tramoId: number): Promise<void> => {
+    if (!activo) throw new Error("Selecciona un cortejo antes de borrar");
+
+    try {
+      setError(null);
+      await axiosClient.delete(TramoEndpoints.delete(cofradiaId, cortejoId, tramoId));
+      await fetchTramos();
+    } catch (err) {
+      const mensaje = mensajeDe(err, "Error al borrar el tramo");
+      setError(mensaje);
+      throw new Error(mensaje);
+    }
+  };
+
+  /**
+   * Guarda el orden tras un arrastre. Como en los cortejos, el
+   * servidor asigna las posiciones y devuelve la lista ya ordenada.
+   */
+  const reordenarTramos = async (ids: number[]): Promise<void> => {
+    if (!activo) return;
+
+    try {
+      setError(null);
+      const res = await axiosClient.patch<{ tramos: Tramo[] }>(
+        TramoEndpoints.reorder(cofradiaId, cortejoId),
+        { ids },
+      );
+      setTramos(res.data.tramos);
+    } catch (err) {
+      const mensaje = mensajeDe(err, "Error al guardar el nuevo orden");
+      setError(mensaje);
+      throw new Error(mensaje);
+    }
+  };
 
   /* =======================
      Adaptación a UI
@@ -78,5 +162,9 @@ export const useTramos = (cofradiaId: number, cortejoId: number): UseTramosRetur
     loading,
     error,
     refetch: fetchTramos,
+    crearTramo,
+    editarTramo,
+    borrarTramo,
+    reordenarTramos,
   };
 };

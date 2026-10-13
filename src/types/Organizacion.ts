@@ -34,10 +34,13 @@ export interface InsigniaElemento {
   cantidad: number;
 }
 
-/** Payload de alta. `orden` es obligatorio y define la posición en la marcha. */
+/**
+ * Payload de alta. `orden` es opcional: si se omite, el cortejo entra
+ * al final y la posición se cambia después arrastrando la fila.
+ */
 export interface CortejoInput {
   nombre: string;
-  orden: number;
+  orden?: number;
 }
 
 export interface CortejoUpdateInput {

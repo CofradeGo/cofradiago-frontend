@@ -97,6 +97,25 @@ export const useCortejos = (cofradiaId: number) => {
     }
   };
 
+  /**
+   * Guarda el orden tras un arrastre. El servidor asigna las
+   * posiciones, así que aquí solo se envían los ids ordenados y se
+   * adopta la respuesta como nueva verdad.
+   */
+  const reordenarCortejos = async (ids: number[]): Promise<void> => {
+    try {
+      setError(null);
+      const res = await axiosClient.patch<{ cortejos: Cortejo[] }>(
+        CortejoEndpoints.reorder(cofradiaId),
+        { ids },
+      );
+      setCortejos(res.data.cortejos);
+    } catch (err) {
+      setError(mensajeDe(err, "Error al guardar el nuevo orden"));
+      throw new Error(mensajeDe(err, "Error al guardar el nuevo orden"));
+    }
+  };
+
   return {
     cortejos,
     loading,
@@ -105,5 +124,6 @@ export const useCortejos = (cofradiaId: number) => {
     crearCortejo,
     editarCortejo,
     borrarCortejo,
+    reordenarCortejos,
   };
 };

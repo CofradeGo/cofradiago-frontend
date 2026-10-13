@@ -1,6 +1,7 @@
 import React from "react";
 import { TablaGestional } from "./TablaGestional";
 import type { Cortejo } from "../../../types/Organizacion";
+import type { Ordenable } from "./TablaGestional";
 
 interface CortejosTableProps {
   cortejos: Cortejo[];
@@ -9,6 +10,8 @@ interface CortejosTableProps {
   onAnadir?: () => void;
   onEditar?: (cortejo: Cortejo) => void;
   onEliminar?: (cortejo: Cortejo) => void;
+  /** Arrastrar una fila cambia la posición del cortejo en la marcha. */
+  ordenable?: Ordenable;
 }
 
 /** Listado de los cortejos de la cofradía, ordenados por posición en la marcha. */
@@ -19,6 +22,7 @@ export const CortejosTable: React.FC<CortejosTableProps> = ({
   onAnadir,
   onEditar,
   onEliminar,
+  ordenable,
 }) => (
   <TablaGestional<Cortejo>
     titulo="Cortejos"
@@ -30,6 +34,7 @@ export const CortejosTable: React.FC<CortejosTableProps> = ({
     onAnadir={onAnadir}
     onEditar={onEditar}
     onEliminar={onEliminar}
+    ordenable={ordenable}
     vacio="No hay cortejos definidos en esta cofradía."
     getKey={(c) => c.id}
     columnas={[

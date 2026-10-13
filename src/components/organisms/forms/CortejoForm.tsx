@@ -7,8 +7,6 @@ interface CortejoFormProps {
   isOpen: boolean;
   /** Si se pasa, el formulario edita; si es null, crea uno nuevo. */
   cortejo: Cortejo | null;
-  /** Orden ya usado, para sugerir el siguiente al crear. */
-  siguienteOrden?: number;
   loading?: boolean;
   errorServidor?: string | null;
   onClose: () => void;
@@ -17,10 +15,9 @@ interface CortejoFormProps {
 
 interface Errores {
   nombre?: string;
-  orden?: string;
 }
 
-const validar = (nombre: string, orden: string): Errores => {
+const validar = (nombre: string): Errores => {
   const errores: Errores = {};
 
   if (!nombre.trim()) {
@@ -31,22 +28,12 @@ const validar = (nombre: string, orden: string): Errores => {
     errores.nombre = "No puede superar los 100 caracteres";
   }
 
-  if (!orden.trim()) {
-    errores.orden = "El orden es obligatorio";
-  } else {
-    const n = Number(orden);
-    if (!Number.isInteger(n)) errores.orden = "Debe ser un número entero";
-    else if (n < 1) errores.orden = "El orden empieza en 1";
-    else if (n > 999) errores.orden = "Máximo 999";
-  }
-
   return errores;
 };
 
 export const CortejoForm: React.FC<CortejoFormProps> = ({
   isOpen,
   cortejo,
-  siguienteOrden = 1,
   loading = false,
   errorServidor,
   onClose,
@@ -56,26 +43,21 @@ export const CortejoForm: React.FC<CortejoFormProps> = ({
   // (el padre lo renderiza solo si isOpen y le pasa key), así que el
   // estado inicial basta: no hace falta sincronizarlo con un efecto.
   const [nombre, setNombre] = useState(() => cortejo?.nombre ?? "");
-  const [orden, setOrden] = useState(() =>
-    cortejo ? String(cortejo.orden) : String(siguienteOrden),
-  );
-  const [tocado, setTocado] = useState<{ nombre?: boolean; orden?: boolean }>({});
+  const [tocado, setTocado] = useState<{ nombre?: boolean }>({});
 
   // La validación se deriva en cada render en vez de guardarse en
   // estado con un efecto: así no puede quedar desincronizada del valor.
-  // `tocado` decide si se muestra, para no marcar campos vacíos antes
-  // de que el usuario los rellene.
-  const errores = useMemo(() => validar(nombre, orden), [nombre, orden]);
+  const errores = useMemo(() => validar(nombre), [nombre]);
 
   const editando = cortejo !== null;
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTocado({ nombre: true, orden: true });
+    setTocado({ nombre: true });
 
     if (Object.keys(errores).length > 0) return;
 
-    await onSubmit({ nombre: nombre.trim(), orden: Number(orden) });
+    await onSubmit({ nombre: nombre.trim() });
   };
 
   return (
@@ -112,23 +94,17 @@ export const CortejoForm: React.FC<CortejoFormProps> = ({
           required
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          onBlur={() => setTocado((t) => ({ ...t, nombre: true }))}
+          onBlur={() => setTocado({ nombre: true })}
           error={tocado.nombre ? errores.nombre : undefined}
           placeholder="Cortejo Principal"
         />
 
-        <CampoTexto
-          label="Orden en la marcha"
-          required
-          type="number"
-          min={1}
-          max={999}
-          value={orden}
-          onChange={(e) => setOrden(e.target.value)}
-          onBlur={() => setTocado((t) => ({ ...t, orden: true }))}
-          error={tocado.orden ? errores.orden : undefined}
-          hint="Define la posición del cortejo en la procesión"
-        />
+        {/* El orden ya no se escribe a mano: se cambia arrastrando la
+            fila en la tabla, y lo nuevo entra al final. */}
+        <p className="-mt-2 text-sm text-gray-500">
+          La posición en la marcha se cambia arrastrando la fila en la tabla. El cortejo nuevo se
+          añadirá al final.
+        </p>
       </form>
     </Modal>
   );

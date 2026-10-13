@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { CortejosTable } from "./tables/CortejosTable";
 import { CortejoForm } from "./forms/CortejoForm";
 import { ConfirmDialog } from "../atoms/ConfirmDialog";
 import { useToast } from "./toast/useToast";
 import { useCortejos } from "../../hooks/useCortejos";
+import { useOrdenable } from "../../hooks/useOrdenable";
 import type { Cortejo, CortejoInput } from "../../types/Organizacion";
 
 /**
@@ -14,8 +15,38 @@ import type { Cortejo, CortejoInput } from "../../types/Organizacion";
  */
 export const GestionCortejos: React.FC<{ cofradiaId: number }> = ({ cofradiaId }) => {
   const toast = useToast();
-  const { cortejos, loading, error, crearCortejo, editarCortejo, borrarCortejo } =
-    useCortejos(cofradiaId);
+  const {
+    cortejos,
+    loading,
+    error,
+    crearCortejo,
+    editarCortejo,
+    borrarCortejo,
+    reordenarCortejos,
+    refetch,
+  } = useCortejos(cofradiaId);
+
+  const reordenar = useCallback(
+    async (ids: number[]) => {
+      await reordenarCortejos(ids);
+      toast.success("Orden de los cortejos guardado");
+    },
+    [reordenarCortejos, toast],
+  );
+
+  const {
+    items,
+    alSoltar,
+    guardando: guardandoOrden,
+    errorOrden,
+  } = useOrdenable({
+    items: cortejos,
+    onGuardarOrden: reordenar,
+    onError: () => {
+      toast.error("No se ha podido guardar el orden. Se ha restaurado la lista.");
+      void refetch();
+    },
+  });
 
   const [formAbierto, setFormAbierto] = useState(false);
   const [enEdicion, setEnEdicion] = useState<Cortejo | null>(null);
@@ -77,9 +108,15 @@ export const GestionCortejos: React.FC<{ cofradiaId: number }> = ({ cofradiaId }
   return (
     <>
       <CortejosTable
-        cortejos={cortejos}
+        cortejos={items}
         loading={loading}
         error={error}
+        ordenable={{
+          alSoltar,
+          guardando: guardandoOrden,
+          errorOrden,
+          getRotulo: (id) => cortejos.find((c) => c.id === id)?.nombre ?? `cortejo ${id}`,
+        }}
         onAnadir={abrirNuevo}
         onEditar={abrirEdicion}
         onEliminar={setPorBorrar}
@@ -90,7 +127,6 @@ export const GestionCortejos: React.FC<{ cofradiaId: number }> = ({ cofradiaId }
           isOpen={formAbierto}
           key={enEdicion?.id ?? "nuevo"}
           cortejo={enEdicion}
-          siguienteOrden={cortejos.length > 0 ? Math.max(...cortejos.map((c) => c.orden)) + 1 : 1}
           loading={guardando}
           errorServidor={errorForm}
           onClose={() => {

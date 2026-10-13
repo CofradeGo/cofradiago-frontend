@@ -52,6 +52,7 @@ export const CortejoEndpoints = {
     `/cofradias/${cofradiaId}/cortejos/${cortejoId}`,
   delete: (cofradiaId: number, cortejoId: number) =>
     `/cofradias/${cofradiaId}/cortejos/${cortejoId}`,
+  reorder: (cofradiaId: number) => `/cofradias/${cofradiaId}/cortejos/orden`,
 };
 
 // -------------------- Puestos --------------------
@@ -83,6 +84,9 @@ export const TramoEndpoints = {
 
   delete: (cofradiaId: number, cortejoId: number, tramoId: number) =>
     `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}`,
+
+  reorder: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/orden`,
 };
 
 // -------------------- Insignias --------------------
