@@ -1,7 +1,6 @@
 import React from "react";
 import { Award, ChevronDown, ChevronRight, Flag, Trash2, Users } from "lucide-react";
-import { SelectorAsignacion } from "./SelectorAsignacion";
-import { SelectorCargos } from "./SelectorCargos";
+import { SelectorPlazas } from "./SelectorPlazas";
 import type { TramoEnProcesion } from "../../../hooks/useProcesion";
 
 interface ProcesionTramosProps {
@@ -13,11 +12,51 @@ interface ProcesionTramosProps {
   puedeEditar?: boolean;
   insigniasDisponibles?: { id: number; nombre: string }[];
   cargosDisponibles?: { id: number; nombre: string }[];
+  puestosDisponibles?: { id: number; nombre: string }[];
   guardando?: boolean;
-  onGuardarInsignias?: (tramoId: number, ids: number[]) => Promise<void>;
-  onGuardarCargos?: (tramoId: number, cargos: { id: number; cantidad: number }[]) => Promise<void>;
+  /** Los tres hacen lo mismo: qué elementos van en el tramo y con cuántas plazas. */
+  onGuardarInsignias?: (
+    tramoId: number,
+    elementos: { id: number; plazas: number }[],
+  ) => Promise<void>;
+  onGuardarCargos?: (tramoId: number, elementos: { id: number; plazas: number }[]) => Promise<void>;
+  onGuardarPuestos?: (
+    tramoId: number,
+    elementos: { id: number; plazas: number }[],
+  ) => Promise<void>;
   onBorrarTramo?: (tramo: TramoEnProcesion) => void;
 }
+
+/**
+ * La línea de debajo del nombre del tramo: qué lleva y para cuánta
+ * gente.
+ *
+ * Las tres clases se resumen igual, así que van por la misma función en
+ * vez de tres condiciones repetidas. Los puestos añaden además cuánta
+ * gente hay ya, porque es lo único de la vista que son personas reales.
+ */
+const resumenDe = (tramo: TramoEnProcesion) => {
+  const piezas: string[] = [];
+
+  for (const [elementos, singular] of [
+    [tramo.insignias, "insignia"],
+    [tramo.cargos, "cargo"],
+    [tramo.puestos, "puesto"],
+  ] as const) {
+    if (elementos.length === 0) continue;
+
+    const n = elementos.length;
+    const plazas = elementos.reduce((total, e) => total + e.plazas, 0);
+    piezas.push(
+      `${n} ${n === 1 ? singular : `${singular}s`} · ${plazas} ${plazas === 1 ? "plaza" : "plazas"}`,
+    );
+  }
+
+  const gente = tramo.puestos.reduce((total, p) => total + p.hermanos.length, 0);
+  if (gente > 0) piezas.push(`${gente} ${gente === 1 ? "persona" : "personas"}`);
+
+  return piezas.join(" · ");
+};
 
 const HermanosDe = ({
   nombre,
@@ -53,15 +92,16 @@ export const ProcesionTramos: React.FC<ProcesionTramosProps> = ({
   puedeEditar = false,
   insigniasDisponibles = [],
   cargosDisponibles = [],
+  puestosDisponibles = [],
   guardando = false,
   onGuardarInsignias,
   onGuardarCargos,
+  onGuardarPuestos,
   onBorrarTramo,
 }) => (
   <div className="space-y-2">
     {tramos.map((tramo) => {
       const abierto = tramoAbierto === tramo.id;
-      const gente = tramo.puestos.reduce((n, p) => n + p.hermanos.length, 0);
 
       return (
         <section
@@ -82,24 +122,7 @@ export const ProcesionTramos: React.FC<ProcesionTramosProps> = ({
             <span className="flex-1 min-w-0">
               <span className="block text-sm font-semibold text-gray-900">{tramo.nombre}</span>
               <span className="block text-xs text-gray-500 mt-0.5">
-                {[
-                  tramo.insignias.length > 0 &&
-                    `${tramo.insignias.length} ${
-                      tramo.insignias.length === 1 ? "insignia" : "insignias"
-                    }`,
-                  tramo.cargos.length > 0 &&
-                    (() => {
-                      const plazas = tramo.cargos.reduce((n, c) => n + c.cantidad, 0);
-                      return `${tramo.cargos.length} ${
-                        tramo.cargos.length === 1 ? "cargo" : "cargos"
-                      } · ${plazas} ${plazas === 1 ? "plaza" : "plazas"}`;
-                    })(),
-                  tramo.puestos.length > 0 &&
-                    `${tramo.puestos.length} ${tramo.puestos.length === 1 ? "puesto" : "puestos"}`,
-                  tramo.puestos.length > 0 && `${gente} ${gente === 1 ? "persona" : "personas"}`,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || "Sin nada asignado todavía"}
+                {resumenDe(tramo) || "Sin nada asignado todavía"}
               </span>
             </span>
 
@@ -138,25 +161,37 @@ export const ProcesionTramos: React.FC<ProcesionTramosProps> = ({
               {puedeEditar ? (
                 <div className="grid gap-2 sm:grid-cols-2 mb-3">
                   {onGuardarInsignias && (
-                    <SelectorAsignacion
+                    <SelectorPlazas
                       titulo="Insignias"
                       guardados={tramo.insignias}
                       disponibles={insigniasDisponibles}
                       guardando={guardando}
-                      onGuardar={(ids) => onGuardarInsignias(tramo.id, ids)}
+                      onGuardar={(lista) => onGuardarInsignias(tramo.id, lista)}
                     />
                   )}
                   {onGuardarCargos && (
-                    <SelectorCargos
+                    <SelectorPlazas
+                      titulo="Cargos"
                       guardados={tramo.cargos}
                       disponibles={cargosDisponibles}
                       guardando={guardando}
                       onGuardar={(lista) => onGuardarCargos(tramo.id, lista)}
                     />
                   )}
+                  {onGuardarPuestos && (
+                    <SelectorPlazas
+                      titulo="Puestos"
+                      guardados={tramo.puestos}
+                      disponibles={puestosDisponibles}
+                      guardando={guardando}
+                      onGuardar={(lista) => onGuardarPuestos(tramo.id, lista)}
+                    />
+                  )}
                 </div>
               ) : (
-                (tramo.insignias.length > 0 || tramo.cargos.length > 0) && (
+                (tramo.insignias.length > 0 ||
+                  tramo.cargos.length > 0 ||
+                  tramo.puestos.length > 0) && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {tramo.insignias.map((i) => (
                       <span
@@ -174,6 +209,7 @@ export const ProcesionTramos: React.FC<ProcesionTramosProps> = ({
                       >
                         <Award className="w-3 h-3" />
                         {c.nombre}
+                        {c.plazas > 1 && <span className="text-violet-500">×{c.plazas}</span>}
                       </span>
                     ))}
                   </div>
@@ -183,7 +219,7 @@ export const ProcesionTramos: React.FC<ProcesionTramosProps> = ({
               {tramo.puestos.length === 0 ? (
                 <p className="text-sm text-gray-500 italic py-1">
                   {puedeEditar
-                    ? "Este tramo todavía no tiene puestos. Se añadirán con el módulo de papeleta de sitio."
+                    ? "Este tramo todavía no tiene puestos. Se añaden con el selector de arriba."
                     : "Este tramo todavía no tiene puestos definidos."}
                 </p>
               ) : (

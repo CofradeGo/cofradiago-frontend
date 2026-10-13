@@ -14,32 +14,35 @@ export interface HermanoEnPuesto {
   apellidos: string;
 }
 
-export interface PuestoEnTramo {
+/**
+ * Un elemento colocado en un tramo: un puesto, una insignia o un cargo.
+ *
+ * `plazas` es cuántas personas hacen falta, no cuántas hay ya. En los
+ * tres significa lo mismo, por eso comparten forma y se editan con el
+ * mismo selector.
+ */
+export interface ElementoEnTramo {
   id: number;
   nombre: string;
+  plazas: number;
   hermanos: HermanoEnPuesto[];
 }
 
-/** Insignia asignada a un tramo. Sin personas todavía: eso llega con
- *  el módulo de papeleta de sitio. */
-export interface InsigniaEnTramo {
-  id: number;
-  nombre: string;
+export interface InsigniaEnTramo extends ElementoEnTramo {
   descripcion?: string | null;
 }
 
-export interface CargoEnTramo {
+export type PuestoEnTramo = ElementoEnTramo;
+export type CargoEnTramo = ElementoEnTramo;
+
+/** Un elemento con las plazas que ocupa en el tramo, al guardarlo. */
+export interface ElementoConPlazas {
   id: number;
-  nombre: string;
-  /** Cuántas plazas de ese cargo hay en el tramo. */
-  cantidad: number;
+  plazas: number;
 }
 
-/** Un cargo al que se le indica cuántas plazas ocupa en el tramo. */
-export interface CargoConPlazas {
-  id: number;
-  cantidad: number;
-}
+/** Las tres clases de elemento que se colocan en un tramo. */
+export type ClaseElemento = "insignias" | "cargos" | "puestos";
 
 export interface TramoEnProcesion {
   id: number;
@@ -59,6 +62,8 @@ export interface Procesion {
     hermanos: number;
     insignias: number;
     cargos: number;
+    /** Personas que hacen falta, sumando puestos, insignias y cargos. */
+    plazas: number;
   };
 }
 
@@ -117,40 +122,26 @@ export const useProcesion = (cofradiaId: number, cortejoId: number) => {
     void refetch();
   }, [refetch]);
 
-  /** Guarda qué insignias van en el tramo. Manda la lista completa. */
-  const guardarInsignias = async (
+  /**
+   * Guarda qué insignias, cargos o puestos van en el tramo, y cuántas
+   * plazas de cada uno. Manda siempre la lista completa.
+   */
+  const guardarElementos = async (
+    clase: ClaseElemento,
     cortejoId: number,
     tramoId: number,
-    insigniaIds: number[],
+    elementos: ElementoConPlazas[],
   ): Promise<void> => {
     try {
-      await axiosClient.put(TramoEndpoints.setInsignias(cofradiaId, cortejoId, tramoId), {
-        insigniaIds,
+      await axiosClient.put(TramoEndpoints.setElementos(clase, cofradiaId, cortejoId, tramoId), {
+        [clase]: elementos,
       });
       // Se recarga para que la vista refleje lo guardado sin tener que
       // reconstruir el árbol a mano en el estado local.
       await refetch();
     } catch (err) {
-      throw new Error(mensajeDe(err, "No se ha podido guardar las insignias del tramo"));
-    }
-  };
-
-  /**
-   * Guarda qué cargos van en el tramo y cuántas plazas de cada uno.
-   * Manda la lista completa.
-   */
-  const guardarCargos = async (
-    cortejoId: number,
-    tramoId: number,
-    cargos: CargoConPlazas[],
-  ): Promise<void> => {
-    try {
-      await axiosClient.put(TramoEndpoints.setCargos(cofradiaId, cortejoId, tramoId), {
-        cargos,
-      });
-      await refetch();
-    } catch (err) {
-      throw new Error(mensajeDe(err, "No se ha podido guardar los cargos del tramo"));
+      const enPlural = `${clase} del tramo`;
+      throw new Error(mensajeDe(err, `No se ha podido guardar las ${enPlural}`));
     }
   };
 
@@ -159,7 +150,6 @@ export const useProcesion = (cofradiaId: number, cortejoId: number) => {
     loading,
     error,
     refetch,
-    guardarInsignias,
-    guardarCargos,
+    guardarElementos,
   };
 };

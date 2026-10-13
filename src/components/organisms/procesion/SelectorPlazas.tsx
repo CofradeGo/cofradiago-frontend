@@ -1,27 +1,35 @@
 import React, { useState } from "react";
 import { Check, Loader2, Plus, X } from "lucide-react";
 
-interface SelectorCargosProps {
-  /** Cargos ya guardados en el tramo, con sus plazas. */
-  guardados: { id: number; nombre: string; cantidad: number }[];
-  /** Todos los cargos de la cofradía. */
+interface SelectorPlazasProps {
+  /** Lo que pone en el encabezado: "Insignias", "Cargos" o "Puestos". */
+  titulo: string;
+  /** Elementos ya guardados en el tramo, con sus plazas. */
+  guardados: { id: number; nombre: string; plazas: number }[];
+  /** Todos los elementos de la cofradía de esa clase. */
   disponibles: { id: number; nombre: string }[];
   disabled?: boolean;
   guardando?: boolean;
-  onGuardar: (cargos: { id: number; cantidad: number }[]) => Promise<void>;
+  onGuardar: (elementos: { id: number; plazas: number }[]) => Promise<void>;
 }
 
 const MAX_PLAZAS = 999;
 
 /**
- * Asigna cargos a un tramo, indicando cuántas plazas ocupa cada uno.
+ * Asigna insignias, cargos o puestos a un tramo, indicando cuántas
+ * personas hacen falta de cada uno.
  *
- * Un tramo puede tener varias plazas del mismo cargo: tres diputados
- * de tramo son un solo cargo con `cantidad: 3`. Al montar la
- * estructura se sabe cuántos hacen falta aunque todavía no se sepa
- * quiénes; el módulo de papeleta de sitio rellenará cada plaza.
+ * Los tres se editan igual porque significan lo mismo: "en este tramo
+ * van estas cosas, y de cada una hacen falta estas personas". Tres
+ * diputados son un cargo con `plazas: 3`; cinco personas para llevar la
+ * Cruz de Guía son una insignia con `plazas: 5`, aunque la pieza sea
+ * una sola.
+ *
+ * Al montar la estructura se sabe cuántos hacen falta aunque todavía no
+ * se sepa quiénes; el módulo de papeleta de sitio rellenará cada plaza.
  */
-export const SelectorCargos: React.FC<SelectorCargosProps> = ({
+export const SelectorPlazas: React.FC<SelectorPlazasProps> = ({
+  titulo,
   guardados,
   disponibles,
   disabled = false,
@@ -30,13 +38,13 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
 }) => {
   const [abierto, setAbierto] = useState(false);
 
-  const aPlazas = (xs: { id: number; cantidad: number }[]) =>
-    xs.map((x) => ({ id: x.id, cantidad: x.cantidad }));
+  const aPlazas = (xs: { id: number; plazas: number }[]) =>
+    xs.map((x) => ({ id: x.id, plazas: x.plazas }));
 
   // Arranca con lo guardado y se vuelve a poner si eso cambia desde
   // fuera. Se ajusta durante el render y no en un efecto: con un
   // efecto, React pinta primero el estado anterior.
-  const clave = guardados.map((g) => `${g.id}:${g.cantidad}`).join(",");
+  const clave = guardados.map((g) => `${g.id}:${g.plazas}`).join(",");
   const [elegidos, setElegidos] = useState(() => aPlazas(guardados));
   const [claveVista, setClaveVista] = useState(clave);
 
@@ -50,19 +58,19 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
   const hayCambios =
     elegidos.length !== guardados.length ||
     !aPlazas(elegidos).every(
-      (e, i) => guardados[i]?.id === e.id && guardados[i]?.cantidad === e.cantidad,
+      (e, i) => guardados[i]?.id === e.id && guardados[i]?.plazas === e.plazas,
     );
 
   const alternar = (id: number) => {
     setElegidos((prev) =>
       prev.some((p) => p.id === id)
         ? prev.filter((p) => p.id !== id)
-        : [...prev, { id, cantidad: 1 }],
+        : [...prev, { id, plazas: 1 }],
     );
   };
 
-  const cambiarPlazas = (id: number, cantidad: number) => {
-    setElegidos((prev) => prev.map((p) => (p.id === id ? { ...p, cantidad } : p)));
+  const cambiarPlazas = (id: number, plazas: number) => {
+    setElegidos((prev) => prev.map((p) => (p.id === id ? { ...p, plazas } : p)));
   };
 
   // Lo guardado primero, en su orden, y lo nuevo detrás: cambiar el
@@ -77,7 +85,7 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
   return (
     <div className="bg-white rounded-lg border border-gray-200 px-3 py-2">
       <div className="flex items-center justify-between gap-2 mb-1.5">
-        <h4 className="text-sm font-medium text-gray-900">Cargos</h4>
+        <h4 className="text-sm font-medium text-gray-900">{titulo}</h4>
         <span className="text-xs text-gray-500">{elegidos.length}</span>
       </div>
 
@@ -85,7 +93,7 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
         <p className="text-xs text-gray-400 italic">Sin asignar</p>
       ) : (
         <ul className="space-y-1 mb-2">
-          {ordenados.map(({ id, cantidad }) => {
+          {ordenados.map(({ id, plazas }) => {
             const nombre = disponibles.find((d) => d.id === id)?.nombre ?? `#${id}`;
             const pendiente = !guardadosIds.has(id);
             return (
@@ -107,7 +115,7 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
                     type="number"
                     min={1}
                     max={MAX_PLAZAS}
-                    value={cantidad}
+                    value={plazas}
                     disabled={disabled || guardando}
                     onChange={(e) => {
                       const n = Number(e.target.value);
@@ -140,7 +148,7 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
           {abierto ? (
             <div className="mt-2 border-t border-gray-100 pt-2">
               {porAnadir.length === 0 ? (
-                <p className="text-xs text-gray-400 italic">No queda ningún cargo por añadir.</p>
+                <p className="text-xs text-gray-400 italic">No queda nada por añadir.</p>
               ) : (
                 <ul className="max-h-36 overflow-y-auto space-y-0.5">
                   {porAnadir.map((d) => (
@@ -160,7 +168,7 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
                 </ul>
               )}
 
-              {elegidos.some((p) => p.cantidad < 1 || p.cantidad > MAX_PLAZAS) && (
+              {elegidos.some((p) => p.plazas < 1 || p.plazas > MAX_PLAZAS) && (
                 <p className="mt-2 text-xs text-red-600">
                   Las plazas deben ser un número entre 1 y {MAX_PLAZAS}.
                 </p>
@@ -210,5 +218,5 @@ export const SelectorCargos: React.FC<SelectorCargosProps> = ({
 };
 
 /** Las plazas tienen que ser enteros dentro del rango. */
-const plazasValidas = (cargos: { cantidad: number }[]) =>
-  cargos.every((c) => Number.isInteger(c.cantidad) && c.cantidad >= 1 && c.cantidad <= MAX_PLAZAS);
+const plazasValidas = (elementos: { plazas: number }[]) =>
+  elementos.every((e) => Number.isInteger(e.plazas) && e.plazas >= 1 && e.plazas <= MAX_PLAZAS);

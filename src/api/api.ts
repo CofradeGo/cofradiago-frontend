@@ -91,12 +91,35 @@ export const TramoEndpoints = {
   reorder: (cofradiaId: number, cortejoId: number) =>
     `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/orden`,
 
-  // Se manda la lista completa de ids que deben quedar, no "añade uno".
-  setInsignias: (cofradiaId: number, cortejoId: number, tramoId: number) =>
-    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}/insignias`,
+  // Insignias, cargos y puestos van al mismo endpoint con otro nombre:
+  // hacen lo mismo y solo cambia la tabla que tocan.
+  // Se manda la lista completa de lo que debe quedar, no "añade uno".
+  setElementos: (
+    clase: "insignias" | "cargos" | "puestos",
+    cofradiaId: number,
+    cortejoId: number,
+    tramoId: number,
+  ) => `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}/${clase}`,
+};
 
-  setCargos: (cofradiaId: number, cortejoId: number, tramoId: number) =>
-    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}/cargos`,
+/**
+ * Peticiones de sitio de los hermanos.
+ *
+ * `:clase` es `puestos`, `insignias` o `cargos`: las tres se registran,
+ * se listan y se deciden igual.
+ */
+export const SolicitudEndpoints = {
+  list: (cofradiaId: number, cortejoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/solicitudes`,
+
+  create: (cofradiaId: number, cortejoId: number, clase: string) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/solicitudes/${clase}`,
+
+  setEstado: (cofradiaId: number, cortejoId: number, clase: string, id: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/solicitudes/${clase}/${id}`,
+
+  delete: (cofradiaId: number, cortejoId: number, clase: string, id: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/solicitudes/${clase}/${id}`,
 };
 
 // -------------------- Insignias --------------------

@@ -6,6 +6,7 @@ import { useCortejos } from "../../hooks/useCortejos";
 import { useProcesion, type TramoEnProcesion } from "../../hooks/useProcesion";
 import { useInsignias } from "../../hooks/useInsignias";
 import { useCargos } from "../../hooks/useCargo";
+import { usePuestos } from "../../hooks/usePuesto";
 import { useTramos } from "../../hooks/useTramos";
 import { ConfirmDialog } from "../../components/atoms/ConfirmDialog";
 import { ToastProvider } from "../../components/organisms/toast/ToastProvider";
@@ -36,14 +37,12 @@ export const CortejosPage: React.FC = () => {
   // va en cabeza. Se deriva en vez de guardarse en estado para que no
   // haga falta un efecto que lo rellene cuando lleguen los datos.
   const cortejoId = cortejoElegido ?? cortejos[0]?.id ?? null;
-  const { procesion, loading, error, refetch, guardarInsignias, guardarCargos } = useProcesion(
-    id,
-    cortejoId ?? 0,
-  );
+  const { procesion, loading, error, refetch, guardarElementos } = useProcesion(id, cortejoId ?? 0);
 
   // Lo que hay en la cofradía para poder asignarlo a los tramos.
   const { insignias } = useInsignias(id);
   const { cargos } = useCargos(id);
+  const { puestos } = usePuestos(id);
   const { crearTramo, borrarTramo } = useTramos(id, cortejoId ?? 0);
 
   // Editar la estructura es modificar: el AUXILIAR solo consulta.
@@ -117,38 +116,33 @@ export const CortejosPage: React.FC = () => {
     }
   };
 
-  const guardarInsigniasDelTramo = async (tramoId: number, ids: number[]) => {
-    if (cortejoId === null) return;
-    setGuardando(true);
-    try {
-      await guardarInsignias(cortejoId, tramoId, ids);
-      toast.success("Insignias del tramo guardadas");
-    } catch (err) {
-      const mensaje = err instanceof Error ? err.message : "No se ha podido guardar";
-      toast.error(mensaje);
-      throw err;
-    } finally {
-      setGuardando(false);
-    }
-  };
+  /**
+   * Guardar lo que va en un tramo: insignias, cargos o puestos.
+   *
+   * Las tres clases hacen lo mismo y solo cambia la etiqueta del aviso,
+   * así que una función las cubre. Repite en vez de mapear porque el
+   * toast necesita el nombre ya en mayúscula.
+   */
+  const guardarElementosDelTramo =
+    (clase: "insignias" | "cargos" | "puestos", enMayusculas: string) =>
+    async (tramoId: number, elementos: { id: number; plazas: number }[]) => {
+      if (cortejoId === null) return;
+      setGuardando(true);
+      try {
+        await guardarElementos(clase, cortejoId, tramoId, elementos);
+        toast.success(`${enMayusculas} del tramo guardadas`);
+      } catch (err) {
+        const mensaje = err instanceof Error ? err.message : "No se ha podido guardar";
+        toast.error(mensaje);
+        throw err;
+      } finally {
+        setGuardando(false);
+      }
+    };
 
-  const guardarCargosDelTramo = async (
-    tramoId: number,
-    cargos: { id: number; cantidad: number }[],
-  ) => {
-    if (cortejoId === null) return;
-    setGuardando(true);
-    try {
-      await guardarCargos(cortejoId, tramoId, cargos);
-      toast.success("Cargos del tramo guardados");
-    } catch (err) {
-      const mensaje = err instanceof Error ? err.message : "No se ha podido guardar";
-      toast.error(mensaje);
-      throw err;
-    } finally {
-      setGuardando(false);
-    }
-  };
+  const guardarInsigniasDelTramo = guardarElementosDelTramo("insignias", "Insignias");
+  const guardarCargosDelTramo = guardarElementosDelTramo("cargos", "Cargos");
+  const guardarPuestosDelTramo = guardarElementosDelTramo("puestos", "Puestos");
 
   const cofradia = cofradiasActivas.find((c: Cofradia) => c.id === id);
 
@@ -230,10 +224,10 @@ export const CortejosPage: React.FC = () => {
                 <strong className="text-gray-900">{procesion?.totales.hermanos}</strong>{" "}
                 {procesion?.totales.hermanos === 1 ? "persona" : "personas"}
               </span>
-              {procesion && procesion.totales.cargos > 0 && (
+              {procesion && procesion.totales.plazas > 0 && (
                 <span>
-                  <strong className="text-gray-900">{procesion.totales.cargos}</strong>{" "}
-                  {procesion.totales.cargos === 1 ? "plaza" : "plazas"}
+                  <strong className="text-gray-900">{procesion.totales.plazas}</strong>{" "}
+                  {procesion.totales.plazas === 1 ? "plaza" : "plazas"}
                 </span>
               )}
             </div>
@@ -248,6 +242,8 @@ export const CortejosPage: React.FC = () => {
               guardando={guardando}
               onGuardarInsignias={guardarInsigniasDelTramo}
               onGuardarCargos={guardarCargosDelTramo}
+              onGuardarPuestos={guardarPuestosDelTramo}
+              puestosDisponibles={puestos}
               onBorrarTramo={setPorBorrar}
             />
           </>
