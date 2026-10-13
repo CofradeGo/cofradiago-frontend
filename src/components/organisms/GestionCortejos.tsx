@@ -142,7 +142,7 @@ export const GestionCortejos: React.FC<{ cofradiaId: number }> = ({ cofradiaId }
         titulo="Eliminar cortejo"
         mensaje={
           porBorrar
-            ? `Se eliminará "${porBorrar.nombre}". Los puestos e insignias que tenga asignados no se borran, pero quedarán sin cortejo.`
+            ? `Se eliminará "${porBorrar.nombre}". Los tramos que lo forman y las personas asignadas a ellos se borran con él.`
             : ""
         }
         loading={borrando}
