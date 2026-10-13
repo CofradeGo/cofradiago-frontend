@@ -90,6 +90,13 @@ export const TramoEndpoints = {
 
   reorder: (cofradiaId: number, cortejoId: number) =>
     `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/orden`,
+
+  // Se manda la lista completa de ids que deben quedar, no "añade uno".
+  setInsignias: (cofradiaId: number, cortejoId: number, tramoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}/insignias`,
+
+  setCargos: (cofradiaId: number, cortejoId: number, tramoId: number) =>
+    `/cofradias/${cofradiaId}/cortejos/${cortejoId}/tramos/${tramoId}/cargos`,
 };
 
 // -------------------- Insignias --------------------

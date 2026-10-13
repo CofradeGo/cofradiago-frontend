@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import axiosClient from "../api/axiosClient";
+import { TramoEndpoints } from "../api/api";
 
 /* =====================================================
    TIPOS · Espejo de procesion.service.ts
@@ -19,17 +20,38 @@ export interface PuestoEnTramo {
   hermanos: HermanoEnPuesto[];
 }
 
+/** Insignia asignada a un tramo. Sin personas todavía: eso llega con
+ *  el módulo de papeleta de sitio. */
+export interface InsigniaEnTramo {
+  id: number;
+  nombre: string;
+  descripcion?: string | null;
+}
+
+export interface CargoEnTramo {
+  id: number;
+  nombre: string;
+}
+
 export interface TramoEnProcesion {
   id: number;
   nombre: string;
   orden: number;
   puestos: PuestoEnTramo[];
+  insignias: InsigniaEnTramo[];
+  cargos: CargoEnTramo[];
 }
 
 export interface Procesion {
   cortejo: { id: number; nombre: string; orden: number };
   tramos: TramoEnProcesion[];
-  totales: { tramos: number; puestos: number; hermanos: number };
+  totales: {
+    tramos: number;
+    puestos: number;
+    hermanos: number;
+    insignias: number;
+    cargos: number;
+  };
 }
 
 interface ApiErrorResponse {
@@ -87,5 +109,46 @@ export const useProcesion = (cofradiaId: number, cortejoId: number) => {
     void refetch();
   }, [refetch]);
 
-  return { procesion, loading, error, refetch };
+  /** Guarda qué insignias van en el tramo. Manda la lista completa. */
+  const guardarInsignias = async (
+    cortejoId: number,
+    tramoId: number,
+    insigniaIds: number[],
+  ): Promise<void> => {
+    try {
+      await axiosClient.put(TramoEndpoints.setInsignias(cofradiaId, cortejoId, tramoId), {
+        insigniaIds,
+      });
+      // Se recarga para que la vista refleje lo guardado sin tener que
+      // reconstruir el árbol a mano en el estado local.
+      await refetch();
+    } catch (err) {
+      throw new Error(mensajeDe(err, "No se ha podido guardar las insignias del tramo"));
+    }
+  };
+
+  /** Guarda qué cargos van en el tramo. Manda la lista completa. */
+  const guardarCargos = async (
+    cortejoId: number,
+    tramoId: number,
+    cargoIds: number[],
+  ): Promise<void> => {
+    try {
+      await axiosClient.put(TramoEndpoints.setCargos(cofradiaId, cortejoId, tramoId), {
+        cargoIds,
+      });
+      await refetch();
+    } catch (err) {
+      throw new Error(mensajeDe(err, "No se ha podido guardar los cargos del tramo"));
+    }
+  };
+
+  return {
+    procesion,
+    loading,
+    error,
+    refetch,
+    guardarInsignias,
+    guardarCargos,
+  };
 };
